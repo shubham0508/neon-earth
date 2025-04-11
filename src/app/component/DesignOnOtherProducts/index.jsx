@@ -51,7 +51,7 @@ const DesignOnOtherProducts = () => {
           Design On Other Products
         </h2>
         <Select defaultValue="curtains">
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px]" aria-label="Select Other Designs">
             <SelectValue placeholder="Select Product Type" />
           </SelectTrigger>
           <SelectContent>

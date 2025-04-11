@@ -952,7 +952,7 @@ export default function ProductSpecification() {
 
         <div className="mb-6">
           <div className="flex flex-col gap-3 mb-6">
-            <label className="font-semibold text-black">Quantity</label>
+            <label htmlFor="quantity" className="font-semibold text-black">Quantity</label>
             <div className="flex items-center">
               <Button
                 variant="outline"

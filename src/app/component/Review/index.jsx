@@ -165,7 +165,7 @@ const RatingAndReview = () => {
             Sort
           </span>
           <Select defaultValue="most-recent" onValueChange={setSortOption}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" aria-label="Sort the ratings">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -180,7 +180,7 @@ const RatingAndReview = () => {
             Filter
           </span>
           <Select defaultValue="all-ratings" onValueChange={setFilterOption}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" aria-label="Filter the ratings">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
