@@ -1,11 +1,11 @@
-import React from 'react'
-import NavBar from '../NavBar'
-import Head from 'next/head'
-import Image from 'next/image'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Heart, Search, ShoppingCart, User, Truck, Gift } from 'lucide-react'
-import Link from 'next/link'
+import React from "react";
+import NavBar from "../NavBar";
+import Head from "next/head";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Heart, Search, ShoppingCart, User, Truck, Gift } from "lucide-react";
+import Link from "next/link";
 
 const Header = () => {
   return (
@@ -19,7 +19,9 @@ const Header = () => {
           <div className="hidden sm:block">{"|"}</div>
           <div className="flex items-center">
             <Gift className="h-4 w-4 mr-2" />
-            <p className="text-xs sm:text-sm">Up to 20% OFF Sitewide. Use Code: REFRESH</p>
+            <p className="text-xs sm:text-sm">
+              Up to 20% OFF Sitewide. Use Code: REFRESH
+            </p>
           </div>
         </div>
       </div>
@@ -38,13 +40,14 @@ const Header = () => {
           <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
             <div className="flex items-center w-full md:w-auto justify-between md:justify-start md:mr-4">
               <Link href="/" className="flex items-center">
-                <Image
-                  src="/logo/companyLogo.webp"
-                  alt="Neon Earth Logo"
-                  width={150}
-                  height={50}
-                  className="h-8 sm:h-10 w-auto"
-                />
+                <div className="relative h-10 w-[150px]">
+                  <Image
+                    src="/logo/companyLogo.webp"
+                    alt="Neon Earth Logo"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
               </Link>
               <div className="flex items-center space-x-4 md:hidden">
                 <button className="p-1">
@@ -65,7 +68,10 @@ const Header = () => {
                 placeholder="Find What Brings You Joy"
                 className="pl-3 w-full py-3 sm:py-4 border-2 sm:border-[3px] border-gray-200 hover:outline-none"
               />
-              <Button className="absolute right-0 top-0 h-full w-12 bg-pink-500 text-white hover:bg-pink-700 cursor-pointer" aria-label="Search">
+              <Button
+                className="absolute right-0 top-0 h-full w-12 bg-pink-500 text-white hover:bg-pink-700 cursor-pointer"
+                aria-label="Search"
+              >
                 <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
@@ -96,7 +102,7 @@ const Header = () => {
         <NavBar />
       </header>
     </div>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

@@ -30,8 +30,8 @@ import Image from "next/image";
 import { DialogTitle } from "@radix-ui/react-dialog";
 
 const mainImages = [
-  "/productImages/product1.jpg",
-  "/productImages/product2.png",
+  "/productImages/product1.webp",
+  "/productImages/product2.webp",
   "/productImages/product3.webp",
   "/productImages/product4.webp",
 ];
@@ -238,8 +238,11 @@ export default function ProductSpecification() {
 
   useEffect(() => {
     setCanvasLoading(true);
-  drawCurtainCanvas();
-  setTimeout(() => setCanvasLoading(false), 100);
+    const timer = setTimeout(() => {
+      drawCurtainCanvas();
+      setCanvasLoading(false);
+    }, 10); // Shorter timeout
+    return () => clearTimeout(timer);
   }, [
     width,
     height,
@@ -301,63 +304,6 @@ export default function ProductSpecification() {
       setWidthInches(0);
       setHeightInches(0);
     }
-  };
-
-  const handleZoomedCanvas = () => {
-    if (!zoomedCanvasRef.current) return;
-
-    const canvas = zoomedCanvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    // Set large dimensions for high detail
-    canvas.width = 1200;
-    canvas.height = 800;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Get total dimensions in inches
-    let totalWidthInches, totalHeightInches;
-    if (measurementUnit === "Inch") {
-      totalWidthInches = width;
-      totalHeightInches = height;
-    } else {
-      totalWidthInches = width * 12 + widthInches;
-      totalHeightInches = height * 12 + heightInches;
-    }
-
-    // Draw room background
-    const backgroundImage = new Image();
-    backgroundImage.onload = () => {
-      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-
-      // Calculate curtain size with proper scaling
-      const wallWidth = canvas.width * 0.85;
-      const aspectRatio = totalHeightInches / totalWidthInches;
-      const curtainWidth = Math.min(
-        wallWidth,
-        (totalWidthInches / 120) * wallWidth
-      );
-      const curtainHeight = curtainWidth * aspectRatio;
-
-      // Position the curtain
-      const curtainX = (canvas.width - curtainWidth) / 2;
-      const curtainY = canvas.height * 0.15;
-
-      // Draw all curtain elements using the same helper functions
-      drawCurtainComponents(
-        ctx,
-        curtainX,
-        curtainY,
-        curtainWidth,
-        curtainHeight,
-        totalWidthInches,
-        totalHeightInches
-      );
-    };
-
-    // Set background image source
-    backgroundImage.src = mainImages[currentBackground];
   };
 
   const drawCurtainCanvas = () => {
@@ -776,6 +722,8 @@ export default function ProductSpecification() {
                   className="w-full h-full object-cover rounded"
                   width={65}
                   height={65}
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
                 />
               </div>
             ))}
@@ -783,11 +731,13 @@ export default function ProductSpecification() {
           <div
             className="relative w-full aspect-square border border-gray-200 rounded-md overflow-hidden"
             ref={canvasContainerRef}
+            style={{ minHeight: "300px", aspectRatio: "1/1" }}
           >
             <canvas
               ref={canvasRef}
               className="w-full h-full cursor-pointer"
               onClick={() => setShowImageDialog(true)}
+              style={{ minHeight: "300px" }}
             />
             <div
               className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-sm font-medium bg-white/80 rounded-full cursor-pointer hover:bg-white"
@@ -814,7 +764,7 @@ export default function ProductSpecification() {
             {Array(4)
               .fill(0)
               .map((_, i) => (
-                <Star key={i} className="w-4 h-4 text-pink-500 fill-pink-500" />
+                <Star key={i} className="w-4 h-4 text-pink-600 fill-pink-500" />
               ))}
             <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
           </div>
@@ -835,37 +785,37 @@ export default function ProductSpecification() {
         <div className="grid grid-cols-2 gap-y-4 mb-6 mt-5">
           <div className="flex items-center">
             <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Bolt className="w-4 h-4 text-pink-500" />
+              <Bolt className="w-4 h-4 text-pink-600" />
             </div>
             <span>Blended woven polyester</span>
           </div>
           <div className="flex items-center">
             <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Circle className="w-4 h-4 text-pink-500" />
+              <Circle className="w-4 h-4 text-pink-600" />
             </div>
             <span>Premium silver eyelets</span>
           </div>
           <div className="flex items-center">
             <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Shirt className="w-4 h-4 text-pink-500" />
+              <Shirt className="w-4 h-4 text-pink-600" />
             </div>
             <span>Washable fabric</span>
           </div>
           <div className="flex items-center">
             <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Palette className="w-4 h-4 text-pink-500" />
+              <Palette className="w-4 h-4 text-pink-600" />
             </div>
             <span>Multiple designs & colors</span>
           </div>
           <div className="flex items-center">
             <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Ruler className="w-4 h-4 text-pink-500" />
+              <Ruler className="w-4 h-4 text-pink-600" />
             </div>
             <span>Customizable sizes</span>
           </div>
           <div className="flex items-center">
             <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <ThumbsUp className="w-4 h-4 text-pink-500" />
+              <ThumbsUp className="w-4 h-4 text-pink-600" />
             </div>
             <span>Easy installation</span>
           </div>
@@ -878,7 +828,10 @@ export default function ProductSpecification() {
               value={measurementUnit}
               onValueChange={handleMeasurementUnitChange}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger
+                className="w-[180px]"
+                aria-label="Select measurement unit"
+              >
                 <SelectValue placeholder="Select unit" />
               </SelectTrigger>
               <SelectContent>
@@ -890,19 +843,20 @@ export default function ProductSpecification() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label htmlFor="width" className="block text-gray-700 mb-2">
                 Width
                 {measurementUnit === "Ft" && (
-                  <span className="text-pink-500 ml-1">(Ft)</span>
+                  <span className="text-pink-600 ml-1">(Ft)</span>
                 )}
                 {measurementUnit === "Inch" && (
-                  <span className="text-pink-500 ml-1">(Inch)</span>
+                  <span className="text-pink-600 ml-1">(Inch)</span>
                 )}
               </label>
               <div className="flex gap-2">
                 {measurementUnit === "Ft" && (
                   <>
                     <Input
+                      id="width"
                       type="number"
                       value={width}
                       onChange={(e) => {
@@ -915,6 +869,7 @@ export default function ProductSpecification() {
                     />
                     <div className="ml-2 text-gray-500 w-10">(Ft)</div>
                     <Input
+                      id="inches"
                       type="number"
                       value={widthInches}
                       onChange={(e) =>
@@ -928,6 +883,7 @@ export default function ProductSpecification() {
                 {measurementUnit === "Inch" && (
                   <>
                     <Input
+                      id="width"
                       type="number"
                       value={width}
                       onChange={(e) => setWidth(parseInt(e.target.value) || 0)}
@@ -940,19 +896,20 @@ export default function ProductSpecification() {
             </div>
 
             <div>
-              <label className="block text-gray-700 mb-2">
+              <label htmlFor="height" className="block text-gray-700 mb-2">
                 Height
                 {measurementUnit === "Ft" && (
-                  <span className="text-pink-500 ml-1">(Ft)</span>
+                  <span className="text-pink-600 ml-1">(Ft)</span>
                 )}
                 {measurementUnit === "Inch" && (
-                  <span className="text-pink-500 ml-1">(Inch)</span>
+                  <span className="text-pink-600 ml-1">(Inch)</span>
                 )}
               </label>
               <div className="flex gap-2">
                 {measurementUnit === "Ft" && (
                   <>
                     <Input
+                      id="height"
                       type="number"
                       value={height}
                       onChange={(e) => setHeight(parseInt(e.target.value) || 0)}
@@ -960,6 +917,7 @@ export default function ProductSpecification() {
                     />
                     <div className="ml-2 text-gray-500 w-10">(Ft)</div>
                     <Input
+                      id="heightInches"
                       type="number"
                       value={heightInches}
                       onChange={(e) =>
@@ -973,6 +931,7 @@ export default function ProductSpecification() {
                 {measurementUnit === "Inch" && (
                   <>
                     <Input
+                      id="height"
                       type="number"
                       value={height}
                       onChange={(e) => setHeight(parseInt(e.target.value) || 0)}
@@ -984,7 +943,7 @@ export default function ProductSpecification() {
               </div>
             </div>
             {dimensionError ? (
-              <p className="text-sm text-pink-500">
+              <p className="text-sm text-pink-600">
                 Allowed Width limit, Min : 4 and Max : 25
               </p>
             ) : null}
@@ -1055,7 +1014,7 @@ export default function ProductSpecification() {
                     {fabric.name}
                   </div>
                   {selectedFabric.name === fabric.name ? (
-                    <div className="text-pink-500 bg-pink-50 mt-1 text-center">
+                    <div className="text-pink-600 bg-pink-50 mt-1 text-center">
                       ${fabric.price.toFixed(2)}
                     </div>
                   ) : null}
