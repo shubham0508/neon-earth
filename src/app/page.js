@@ -1,7 +1,6 @@
 import Breadcrumbs from "./component/BreadCrumb";
 import DesignOnOtherProducts from "./component/DesignOnOtherProducts";
 import FaqSection from "./component/FAQs";
-import HeroSection from "./component/HeroSection";
 import ProductCarousel from "./component/Personalize";
 import ProductDetail from "./component/ProductDescription";
 import ProductInsights from "./component/ProductInsights";

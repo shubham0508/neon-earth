@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import Image from "next/image";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { Maximize2, ArrowLeft } from "lucide-react";
 
 const mainImages = [
   "/productImages/product1.webp",
@@ -223,11 +224,70 @@ export default function ProductSpecification() {
   const [dimensionError, setDimensionError] = useState(false);
   const [showHeadingSheet, setShowHeadingSheet] = useState(false);
   const [canvasLoading, setCanvasLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const rightContainerRef = useRef(null);
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const zoomedCanvasRef = useRef(null);
+
+  useEffect(() => {
+    if (showImageDialog && zoomedCanvasRef.current) {
+      const zoomedCanvas = zoomedCanvasRef.current;
+      const ctx = zoomedCanvas.getContext("2d");
+
+      // Set canvas dimensions (important!)
+      zoomedCanvas.width = zoomedCanvas.clientWidth;
+      zoomedCanvas.height = zoomedCanvas.clientHeight;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, zoomedCanvas.width, zoomedCanvas.height);
+
+      // Calculate dimensions
+      let totalWidthInches, totalHeightInches;
+      if (measurementUnit === "Inch") {
+        totalWidthInches = width;
+        totalHeightInches = height;
+      } else {
+        totalWidthInches = width * 12 + widthInches;
+        totalHeightInches = height * 12 + heightInches;
+      }
+
+      // Draw curtain with higher detail
+      const aspectRatio = totalHeightInches / totalWidthInches;
+      const curtainWidth = zoomedCanvas.width * 0.8;
+      const curtainHeight = curtainWidth * aspectRatio;
+
+      const curtainX = (zoomedCanvas.width - curtainWidth) / 2;
+      const curtainY = (zoomedCanvas.height - curtainHeight) / 2;
+
+      // Draw curtain components
+      drawCurtainComponents(
+        ctx,
+        curtainX,
+        curtainY,
+        curtainWidth,
+        curtainHeight,
+        totalWidthInches,
+        totalHeightInches
+      );
+    }
+  }, [
+    showImageDialog,
+    width,
+    height,
+    widthInches,
+    heightInches,
+    measurementUnit,
+    selectedFabric,
+    selectedHeading,
+    selectedPanel,
+    selectedValance,
+    valanceHeight,
+    selectedTieback,
+    selectedMount,
+  ]);
 
   useEffect(() => {
     setWidth(48);
@@ -241,7 +301,7 @@ export default function ProductSpecification() {
     const timer = setTimeout(() => {
       drawCurtainCanvas();
       setCanvasLoading(false);
-    }, 10); // Shorter timeout
+    }, 10);
     return () => clearTimeout(timer);
   }, [
     width,
@@ -258,6 +318,26 @@ export default function ProductSpecification() {
     selectedMount,
     currentBackground,
   ]);
+
+  const captureCanvasImage = () => {
+    if (!canvasRef.current) return;
+
+    // Capture the current canvas as an image
+    const dataUrl = canvasRef.current.toDataURL("image/png");
+    setPreviewImage(dataUrl);
+    setShowPreview(true);
+  };
+
+  useEffect(() => {
+    if (showImageDialog && zoomedCanvasRef.current) {
+      // Add a small delay to ensure the dialog is rendered before drawing
+      const timer = setTimeout(() => {
+        drawZoomedCanvas();
+        setCanvasLoading(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showImageDialog]);
 
   useEffect(() => {
     setPrice(basePrice * quantity);
@@ -652,6 +732,48 @@ export default function ProductSpecification() {
     }
   };
 
+  const drawZoomedCanvas = () => {
+    if (!zoomedCanvasRef.current) return;
+
+    // Make the zoomed canvas larger for better detail
+    const zoomedCanvas = zoomedCanvasRef.current;
+    // Set actual size instead of style
+    zoomedCanvas.width = zoomedCanvas.clientWidth;
+    zoomedCanvas.height = zoomedCanvas.clientHeight;
+
+    const ctx = zoomedCanvas.getContext("2d");
+    ctx.clearRect(0, 0, zoomedCanvas.width, zoomedCanvas.height);
+
+    // Calculate dimensions based on the current settings
+    let totalWidthInches, totalHeightInches;
+    if (measurementUnit === "Inch") {
+      totalWidthInches = width;
+      totalHeightInches = height;
+    } else {
+      totalWidthInches = width * 12 + widthInches;
+      totalHeightInches = height * 12 + heightInches;
+    }
+
+    // Draw the curtain with more detail
+    const aspectRatio = totalHeightInches / totalWidthInches;
+    const curtainWidth = zoomedCanvas.width * 0.8;
+    const curtainHeight = curtainWidth * aspectRatio;
+
+    const curtainX = (zoomedCanvas.width - curtainWidth) / 2;
+    const curtainY = (zoomedCanvas.height - curtainHeight) / 2;
+
+    // Draw with more detail
+    drawCurtainComponents(
+      ctx,
+      curtainX,
+      curtainY,
+      curtainWidth,
+      curtainHeight,
+      totalWidthInches,
+      totalHeightInches
+    );
+  };
+
   const validateDimensions = (value, type) => {
     const MIN_WIDTH = 48;
     const MAX_WIDTH = 300;
@@ -702,44 +824,49 @@ export default function ProductSpecification() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row bg-white">
-      <div className="w-full lg:w-1/2 p-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto border border-gray-200">
-        <div className="flex flex-col md:flex-row gap-4 h-full">
-          <div className="flex flex-row md:flex-col gap-2">
-            {mainImages.map((img, index) => (
-              <div
-                key={index}
-                className={`border rounded-md cursor-pointer hover:border-pink-500 ${
-                  currentBackground === index
-                    ? "border-pink-500"
-                    : "border-gray-200"
-                }`}
-                onClick={() => setCurrentBackground(index)}
-              >
-                <Image
-                  src={img}
-                  alt={`Room ${index + 1}`}
-                  className="w-full h-full object-cover rounded"
-                  width={65}
-                  height={65}
-                  priority={index === 0}
-                  loading={index === 0 ? "eager" : "lazy"}
-                />
-              </div>
-            ))}
-          </div>
-          <div
-            className="relative w-full aspect-square border border-gray-200 rounded-md overflow-hidden"
-            ref={canvasContainerRef}
-            style={{ minHeight: "300px", aspectRatio: "1/1" }}
-          >
-            <canvas
-              ref={canvasRef}
-              className="w-full h-full cursor-pointer"
-              onClick={() => setShowImageDialog(true)}
-              style={{ minHeight: "300px" }}
-            />
+    <>
+      <div
+        className={`flex flex-col lg:flex-row bg-white ${
+          showPreview ? "opacity-50 pointer-events-none" : ""
+        }`}
+      >
+        <div className="w-full lg:w-1/2 p-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto border border-gray-200">
+          <div className="flex flex-col md:flex-row gap-4 h-full">
+            <div className="flex flex-row md:flex-col gap-2">
+              {mainImages.map((img, index) => (
+                <div
+                  key={index}
+                  className={`border rounded-md cursor-pointer hover:border-pink-500 ${
+                    currentBackground === index
+                      ? "border-pink-500"
+                      : "border-gray-200"
+                  }`}
+                  onClick={() => setCurrentBackground(index)}
+                >
+                  <Image
+                    src={img}
+                    alt={`Room ${index + 1}`}
+                    className="w-full h-full object-cover rounded"
+                    width={65}
+                    height={65}
+                    priority={index === 0}
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                </div>
+              ))}
+            </div>
             <div
+              className="relative w-full aspect-square border border-gray-200 rounded-md overflow-hidden"
+              ref={canvasContainerRef}
+              style={{ minHeight: "300px", aspectRatio: "1/1" }}
+            >
+              <canvas
+                ref={canvasRef}
+                className="w-full h-full cursor-pointer"
+                onClick={captureCanvasImage}
+                style={{ minHeight: "300px" }}
+              />
+              {/* <div
               className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-sm font-medium bg-white/80 rounded-full cursor-pointer hover:bg-white"
               onClick={() => setShowImageDialog(true)}
             >
@@ -747,259 +874,653 @@ export default function ProductSpecification() {
                 <ZoomIn className="w-4 h-4" />
                 <p>Click for personalized view</p>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="w-full lg:w-1/2 p-4 border border-gray-200 relative"
-        ref={rightContainerRef}
-      >
-        <h1 className="text-xl font-semibold mb-1">
-          Custom Drapes - Flat Panel
-        </h1>
-        <div className="flex items-center mb-4">
-          <div className="flex">
-            {Array(4)
-              .fill(0)
-              .map((_, i) => (
-                <Star key={i} className="w-4 h-4 text-pink-600 fill-pink-500" />
-              ))}
-            <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
-          </div>
-          <span className="ml-2 text-sm text-pink-600">21 reviews</span>
-        </div>
-        <div className="text-xl font-semibold mb-4">${price.toFixed(2)}</div>
-
-        <div className="flex items-center bg-[#fff2d8] p-3 mb-6 rounded-md">
-          <span className="mr-2">🚚</span>
-          <p className="text-sm">Expected Delivery by 18 Apr 2025, Fri</p>
-        </div>
-
-        <h2 className="font-semibold">
-          Pinch pleat custom drapes have fabric gathered at heading for a
-          structured appearance.
-        </h2>
-
-        <div className="grid grid-cols-2 gap-y-4 mb-6 mt-5">
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Bolt className="w-4 h-4 text-pink-600" />
-            </div>
-            <span>Blended woven polyester</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Circle className="w-4 h-4 text-pink-600" />
-            </div>
-            <span>Premium silver eyelets</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Shirt className="w-4 h-4 text-pink-600" />
-            </div>
-            <span>Washable fabric</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Palette className="w-4 h-4 text-pink-600" />
-            </div>
-            <span>Multiple designs & colors</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <Ruler className="w-4 h-4 text-pink-600" />
-            </div>
-            <span>Customizable sizes</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-              <ThumbsUp className="w-4 h-4 text-pink-600" />
-            </div>
-            <span>Easy installation</span>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="flex mb-4 align-middle items-center gap-5">
-            <label className="font-medium">Measurement Unit</label>
-            <Select
-              value={measurementUnit}
-              onValueChange={handleMeasurementUnitChange}
-            >
-              <SelectTrigger
-                className="w-[180px]"
-                aria-label="Select measurement unit"
+            </div> */}
+              <div
+                className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-sm font-medium bg-white/80 rounded-full cursor-pointer hover:bg-white"
+                onClick={captureCanvasImage}
               >
-                <SelectValue placeholder="Select unit" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Ft">Ft</SelectItem>
-                <SelectItem value="Inch">Inch</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label htmlFor="width" className="block text-gray-700 mb-2">
-                Width
-                {measurementUnit === "Ft" && (
-                  <span className="text-pink-600 ml-1">(Ft)</span>
-                )}
-                {measurementUnit === "Inch" && (
-                  <span className="text-pink-600 ml-1">(Inch)</span>
-                )}
-              </label>
-              <div className="flex gap-2">
-                {measurementUnit === "Ft" && (
-                  <>
-                    <Input
-                      id="width"
-                      type="number"
-                      value={width}
-                      onChange={(e) => {
-                        const newValue = parseInt(e.target.value) || 0;
-                        if (validateDimensions(newValue, "width")) {
-                          setWidth(newValue);
-                        }
-                      }}
-                      className="w-full"
-                    />
-                    <div className="ml-2 text-gray-500 w-10">(Ft)</div>
-                    <Input
-                      id="inches"
-                      type="number"
-                      value={widthInches}
-                      onChange={(e) =>
-                        setWidthInches(parseInt(e.target.value) || 0)
-                      }
-                      className="w-full"
-                    />
-                    <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                  </>
-                )}
-                {measurementUnit === "Inch" && (
-                  <>
-                    <Input
-                      id="width"
-                      type="number"
-                      value={width}
-                      onChange={(e) => setWidth(parseInt(e.target.value) || 0)}
-                      className="w-full"
-                    />
-                    <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                  </>
-                )}
+                <div className="flex flex-row gap-2 items-center">
+                  <ZoomIn className="w-4 h-4" />
+                  <p>Click for personalized view</p>
+                </div>
               </div>
             </div>
-
-            <div>
-              <label htmlFor="height" className="block text-gray-700 mb-2">
-                Height
-                {measurementUnit === "Ft" && (
-                  <span className="text-pink-600 ml-1">(Ft)</span>
-                )}
-                {measurementUnit === "Inch" && (
-                  <span className="text-pink-600 ml-1">(Inch)</span>
-                )}
-              </label>
-              <div className="flex gap-2">
-                {measurementUnit === "Ft" && (
-                  <>
-                    <Input
-                      id="height"
-                      type="number"
-                      value={height}
-                      onChange={(e) => setHeight(parseInt(e.target.value) || 0)}
-                      className="w-full"
-                    />
-                    <div className="ml-2 text-gray-500 w-10">(Ft)</div>
-                    <Input
-                      id="heightInches"
-                      type="number"
-                      value={heightInches}
-                      onChange={(e) =>
-                        setHeightInches(parseInt(e.target.value) || 0)
-                      }
-                      className="w-full"
-                    />
-                    <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                  </>
-                )}
-                {measurementUnit === "Inch" && (
-                  <>
-                    <Input
-                      id="height"
-                      type="number"
-                      value={height}
-                      onChange={(e) => setHeight(parseInt(e.target.value) || 0)}
-                      className="w-full"
-                    />
-                    <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                  </>
-                )}
-              </div>
-            </div>
-            {dimensionError ? (
-              <p className="text-sm text-pink-600">
-                Allowed Width limit, Min : 4 and Max : 25
-              </p>
-            ) : null}
           </div>
         </div>
 
-        <div className="mb-6">
-          <div className="flex flex-col gap-3 mb-6">
-            <label htmlFor="quantity" className="font-semibold text-black">Quantity</label>
+        <div
+          className="w-full lg:w-1/2 p-4 border border-gray-200 relative"
+          ref={rightContainerRef}
+        >
+          <h1 className="text-xl font-semibold mb-1">
+            Custom Drapes - Flat Panel
+          </h1>
+          <div className="flex items-center mb-4">
+            <div className="flex">
+              {Array(4)
+                .fill(0)
+                .map((_, i) => (
+                  <Star
+                    key={i}
+                    className="w-4 h-4 text-pink-600 fill-pink-500"
+                  />
+                ))}
+              <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
+            </div>
+            <span className="ml-2 text-sm text-pink-600">21 reviews</span>
+          </div>
+          <div className="text-xl font-semibold mb-4">${price.toFixed(2)}</div>
+
+          <div className="flex items-center bg-[#fff2d8] p-3 mb-6 rounded-md">
+            <span className="mr-2">🚚</span>
+            <p className="text-sm">Expected Delivery by 18 Apr 2025, Fri</p>
+          </div>
+
+          <h2 className="font-semibold">
+            Pinch pleat custom drapes have fabric gathered at heading for a
+            structured appearance.
+          </h2>
+
+          <div className="grid grid-cols-2 gap-y-4 mb-6 mt-5">
             <div className="flex items-center">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleQuantityChange(quantity - 1)}
-                disabled={quantity <= 1}
-                className="rounded-full"
-                aria-label="Reduce Quantity"
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <Input
-                id="quantity"
-                type="number"
-                value={quantity}
-                onChange={(e) =>
-                  handleQuantityChange(parseInt(e.target.value) || 1)
-                }
-                className="w-20 mx-2 text-center"
-                min={1}
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleQuantityChange(quantity + 1)}
-                className="rounded-full"
-                aria-label="Add Quantity"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
+                <Bolt className="w-4 h-4 text-pink-600" />
+              </div>
+              <span>Blended woven polyester</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
+                <Circle className="w-4 h-4 text-pink-600" />
+              </div>
+              <span>Premium silver eyelets</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
+                <Shirt className="w-4 h-4 text-pink-600" />
+              </div>
+              <span>Washable fabric</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
+                <Palette className="w-4 h-4 text-pink-600" />
+              </div>
+              <span>Multiple designs & colors</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
+                <Ruler className="w-4 h-4 text-pink-600" />
+              </div>
+              <span>Customizable sizes</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
+                <ThumbsUp className="w-4 h-4 text-pink-600" />
+              </div>
+              <span>Easy installation</span>
             </div>
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Fabric/Texture</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {fabricTextures.slice(0, 5).map((fabric, index) => (
+            <div className="flex mb-4 align-middle items-center gap-5">
+              <label className="font-medium">Measurement Unit</label>
+              <Select
+                value={measurementUnit}
+                onValueChange={handleMeasurementUnitChange}
+              >
+                <SelectTrigger
+                  className="w-[180px]"
+                  aria-label="Select measurement unit"
+                >
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Ft">Ft</SelectItem>
+                  <SelectItem value="Inch">Inch</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label htmlFor="width" className="block text-gray-700 mb-2">
+                  Width
+                  {measurementUnit === "Ft" && (
+                    <span className="text-pink-600 ml-1">(Ft)</span>
+                  )}
+                  {measurementUnit === "Inch" && (
+                    <span className="text-pink-600 ml-1">(Inch)</span>
+                  )}
+                </label>
+                <div className="flex gap-2">
+                  {measurementUnit === "Ft" && (
+                    <>
+                      <Input
+                        id="width"
+                        type="number"
+                        value={width}
+                        onChange={(e) => {
+                          const newValue = parseInt(e.target.value) || 0;
+                          if (validateDimensions(newValue, "width")) {
+                            setWidth(newValue);
+                          }
+                        }}
+                        className="w-full"
+                      />
+                      <div className="ml-2 text-gray-500 w-10">(Ft)</div>
+                      <Input
+                        id="inches"
+                        type="number"
+                        value={widthInches}
+                        onChange={(e) =>
+                          setWidthInches(parseInt(e.target.value) || 0)
+                        }
+                        className="w-full"
+                      />
+                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
+                    </>
+                  )}
+                  {measurementUnit === "Inch" && (
+                    <>
+                      <Input
+                        id="width"
+                        type="number"
+                        value={width}
+                        onChange={(e) =>
+                          setWidth(parseInt(e.target.value) || 0)
+                        }
+                        className="w-full"
+                      />
+                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="height" className="block text-gray-700 mb-2">
+                  Height
+                  {measurementUnit === "Ft" && (
+                    <span className="text-pink-600 ml-1">(Ft)</span>
+                  )}
+                  {measurementUnit === "Inch" && (
+                    <span className="text-pink-600 ml-1">(Inch)</span>
+                  )}
+                </label>
+                <div className="flex gap-2">
+                  {measurementUnit === "Ft" && (
+                    <>
+                      <Input
+                        id="height"
+                        type="number"
+                        value={height}
+                        onChange={(e) =>
+                          setHeight(parseInt(e.target.value) || 0)
+                        }
+                        className="w-full"
+                      />
+                      <div className="ml-2 text-gray-500 w-10">(Ft)</div>
+                      <Input
+                        id="heightInches"
+                        type="number"
+                        value={heightInches}
+                        onChange={(e) =>
+                          setHeightInches(parseInt(e.target.value) || 0)
+                        }
+                        className="w-full"
+                      />
+                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
+                    </>
+                  )}
+                  {measurementUnit === "Inch" && (
+                    <>
+                      <Input
+                        id="height"
+                        type="number"
+                        value={height}
+                        onChange={(e) =>
+                          setHeight(parseInt(e.target.value) || 0)
+                        }
+                        className="w-full"
+                      />
+                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
+                    </>
+                  )}
+                </div>
+              </div>
+              {dimensionError ? (
+                <p className="text-sm text-pink-600">
+                  Allowed Width limit, Min : 4 and Max : 25
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex flex-col gap-3 mb-6">
+              <label htmlFor="quantity" className="font-semibold text-black">
+                Quantity
+              </label>
+              <div className="flex items-center">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleQuantityChange(quantity - 1)}
+                  disabled={quantity <= 1}
+                  className="rounded-full"
+                  aria-label="Reduce Quantity"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={quantity}
+                  onChange={(e) =>
+                    handleQuantityChange(parseInt(e.target.value) || 1)
+                  }
+                  className="w-20 mx-2 text-center"
+                  min={1}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleQuantityChange(quantity + 1)}
+                  className="rounded-full"
+                  aria-label="Add Quantity"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Fabric/Texture</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {fabricTextures.slice(0, 5).map((fabric, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedFabric.name === fabric.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => handleFabricChange(fabric)}
+                    onMouseEnter={() => setCurrentImage(fabric.image)}
+                    onMouseLeave={() => setCurrentImage(selectedFabric.image)}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={fabric.image}
+                        alt={fabric.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center truncate">
+                      {fabric.name}
+                    </div>
+                    {selectedFabric.name === fabric.name ? (
+                      <div className="text-pink-600 bg-pink-50 mt-1 text-center">
+                        ${fabric.price.toFixed(2)}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
                 <div
-                  key={index}
                   className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedFabric.name === fabric.name
+                    selectedFabric.name === fabricTextures[5].name
                       ? "border-pink-500"
                       : "border-gray-200"
                   }`}
-                  onClick={() => handleFabricChange(fabric)}
-                  onMouseEnter={() => setCurrentImage(fabric.image)}
-                  onMouseLeave={() => setCurrentImage(selectedFabric.image)}
+                  onClick={() => setShowFabricSheet(true)}
+                >
+                  <div className="aspect-square flex items-center justify-center relative">
+                    <Image
+                      src={fabricTextures[5].image}
+                      alt={fabricTextures[5].name}
+                      className="w-full h-full object-cover"
+                      width={48}
+                      height={48}
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <Info className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="p-1 text-xs text-center">More</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Heading Style</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 overflow-x-auto">
+                {headingStyles.slice(0, 5).map((style, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedHeading.name === style.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedHeading(style);
+                      setCurrentImage(style.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={style.image}
+                        alt={style.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center truncate">
+                      {style.name}
+                    </div>
+                  </div>
+                ))}
+                <div
+                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                    selectedHeading.name === headingStyles[5].name
+                      ? "border-pink-500"
+                      : "border-gray-200"
+                  }`}
+                  onClick={() => setShowHeadingSheet(true)}
+                >
+                  <div className="aspect-square flex items-center justify-center relative">
+                    <Image
+                      src={headingStyles[5].image}
+                      alt={headingStyles[5].name}
+                      className="w-full h-full object-cover"
+                      width={48}
+                      height={48}
+                    />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <Info className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="p-1 text-xs text-center">More</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">
+                Placement of Curtain
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {placementOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedPlacement.name === option.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedPlacement(option);
+                      setCurrentImage(option.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={option.image}
+                        alt={option.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center">{option.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Mount Option</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {mountOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedMount.name === option.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedMount(option);
+                      setCurrentImage(option.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={option.image}
+                        alt={option.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center">{option.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">
+                Panel Selection
+              </label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {panelOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedPanel.name === option.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedPanel(option);
+                      setCurrentImage(option.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={option.image}
+                        alt={option.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center">{option.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Tiebacks</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {tiebackOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedTieback.name === option.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedTieback(option);
+                      setCurrentImage(option.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={option.image}
+                        alt={option.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center">{option.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Valance</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4">
+                {valanceOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedValance.name === option.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedValance(option);
+                      setCurrentImage(option.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={option.image}
+                        alt={option.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center">{option.name}</div>
+                  </div>
+                ))}
+              </div>
+              {selectedValance.hasValance && (
+                <div className="mt-4">
+                  <label className="block text-gray-700 mb-2">
+                    Valance Height
+                  </label>
+                  <div className="flex gap-2">
+                    {measurementUnit === "Ft" ? (
+                      <>
+                        <Input
+                          type="number"
+                          value={valanceHeight}
+                          onChange={(e) =>
+                            setValanceHeight(parseInt(e.target.value) || 0)
+                          }
+                          className="w-full"
+                        />
+                        <div className="ml-2 text-gray-500 w-10">(Ft)</div>
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          type="number"
+                          value={valanceHeight}
+                          onChange={(e) =>
+                            setValanceHeight(parseInt(e.target.value) || 0)
+                          }
+                          className="w-full"
+                        />
+                        <div className="ml-2 text-gray-500 w-10">(Inch)</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Liner</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {linerOptions.map((option, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                      selectedLiner.name === option.name
+                        ? "border-pink-500"
+                        : "border-gray-200"
+                    }`}
+                    onClick={() => {
+                      setSelectedLiner(option);
+                      setCurrentImage(option.image);
+                    }}
+                  >
+                    <div className="aspect-square">
+                      <Image
+                        src={option.image}
+                        alt={option.name}
+                        className="w-full h-full object-cover"
+                        width={48}
+                        height={48}
+                      />
+                    </div>
+                    <div className="p-1 text-xs text-center">{option.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 bg-white py-4 border-t border-gray-200 z-10 mt-6">
+            <div className="flex justify-between items-center">
+              <div className="text-2xl font-bold">${price.toFixed(2)}</div>
+              <Button
+                size="lg"
+                className="bg-pink-500 hover:bg-pink-600 text-white px-8 shadow-lg transform hover:-translate-y-1 transition-all duration-200"
+              >
+                Add to Cart
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+          <DialogContent className="sm:max-w-3xl">
+            <DialogTitle>Curtain Preview</DialogTitle>
+            <div className="relative w-full aspect-video">
+              <canvas
+                ref={zoomedCanvasRef}
+                className="w-full h-full object-contain border rounded-lg bg-gray-100"
+              />
+              {canvasLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50">
+                  <p>Loading preview...</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Sheet open={showFabricSheet} onOpenChange={setShowFabricSheet}>
+          <SheetContent side="right" className="w-full sm:w-1/3 p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Fabric/Texture</h3>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {fabricTextures.slice(0, 5).map((fabric, index) => (
+                <div
+                  key={index}
+                  className={`border border-gray-200 rounded-md overflow-hidden cursor-pointer ${
+                    selectedFabric.name === fabric.name
+                      ? "ring-2 ring-pink-500"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    handleFabricChange(fabric);
+                    setShowFabricSheet(false);
+                  }}
                 >
                   <div className="aspect-square">
                     <Image
@@ -1010,55 +1531,35 @@ export default function ProductSpecification() {
                       height={48}
                     />
                   </div>
-                  <div className="p-1 text-xs text-center truncate">
-                    {fabric.name}
-                  </div>
-                  {selectedFabric.name === fabric.name ? (
-                    <div className="text-pink-600 bg-pink-50 mt-1 text-center">
+                  <div className="p-2">
+                    <p className="text-sm font-medium">{fabric.name}</p>
+                    <p className="text-sm text-gray-600">
                       ${fabric.price.toFixed(2)}
-                    </div>
-                  ) : null}
+                    </p>
+                  </div>
                 </div>
               ))}
-              <div
-                className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                  selectedFabric.name === fabricTextures[5].name
-                    ? "border-pink-500"
-                    : "border-gray-200"
-                }`}
-                onClick={() => setShowFabricSheet(true)}
-              >
-                <div className="aspect-square flex items-center justify-center relative">
-                  <Image
-                    src={fabricTextures[5].image}
-                    alt={fabricTextures[5].name}
-                    className="w-full h-full object-cover"
-                    width={48}
-                    height={48}
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <Info className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="p-1 text-xs text-center">More</div>
-              </div>
             </div>
-          </div>
+          </SheetContent>
+        </Sheet>
 
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Heading Style</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 overflow-x-auto">
-              {headingStyles.slice(0, 5).map((style, index) => (
+        <Sheet open={showHeadingSheet} onOpenChange={setShowHeadingSheet}>
+          <SheetContent side="right" className="w-full sm:w-1/3 p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Heading Styles</h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {headingStyles.map((style, index) => (
                 <div
                   key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                  className={`border border-gray-200 rounded-md overflow-hidden cursor-pointer ${
                     selectedHeading.name === style.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
+                      ? "ring-2 ring-pink-500"
+                      : ""
                   }`}
                   onClick={() => {
                     setSelectedHeading(style);
-                    setCurrentImage(style.image);
+                    setShowHeadingSheet(false);
                   }}
                 >
                   <div className="aspect-square">
@@ -1070,367 +1571,45 @@ export default function ProductSpecification() {
                       height={48}
                     />
                   </div>
-                  <div className="p-1 text-xs text-center truncate">
-                    {style.name}
+                  <div className="p-2">
+                    <p className="text-sm font-medium">{style.name}</p>
                   </div>
                 </div>
               ))}
-              <div
-                className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                  selectedHeading.name === headingStyles[5].name
-                    ? "border-pink-500"
-                    : "border-gray-200"
-                }`}
-                onClick={() => setShowHeadingSheet(true)}
-              >
-                <div className="aspect-square flex items-center justify-center relative">
-                  <Image
-                    src={headingStyles[5].image}
-                    alt={headingStyles[5].name}
-                    className="w-full h-full object-cover"
-                    width={48}
-                    height={48}
-                  />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <Info className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="p-1 text-xs text-center">More</div>
-              </div>
             </div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">
-              Placement of Curtain
-            </label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {placementOptions.map((option, index) => (
-                <div
-                  key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedPlacement.name === option.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => {
-                    setSelectedPlacement(option);
-                    setCurrentImage(option.image);
-                  }}
-                >
-                  <div className="aspect-square">
-                    <Image
-                      src={option.image}
-                      alt={option.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="p-1 text-xs text-center">{option.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Mount Option</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {mountOptions.map((option, index) => (
-                <div
-                  key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedMount.name === option.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => {
-                    setSelectedMount(option);
-                    setCurrentImage(option.image);
-                  }}
-                >
-                  <div className="aspect-square">
-                    <Image
-                      src={option.image}
-                      alt={option.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="p-1 text-xs text-center">{option.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Panel Selection</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {panelOptions.map((option, index) => (
-                <div
-                  key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedPanel.name === option.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => {
-                    setSelectedPanel(option);
-                    setCurrentImage(option.image);
-                  }}
-                >
-                  <div className="aspect-square">
-                    <Image
-                      src={option.image}
-                      alt={option.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="p-1 text-xs text-center">{option.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Tiebacks</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {tiebackOptions.map((option, index) => (
-                <div
-                  key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedTieback.name === option.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => {
-                    setSelectedTieback(option);
-                    setCurrentImage(option.image);
-                  }}
-                >
-                  <div className="aspect-square">
-                    <Image
-                      src={option.image}
-                      alt={option.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="p-1 text-xs text-center">{option.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Valance</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4">
-              {valanceOptions.map((option, index) => (
-                <div
-                  key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedValance.name === option.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => {
-                    setSelectedValance(option);
-                    setCurrentImage(option.image);
-                  }}
-                >
-                  <div className="aspect-square">
-                    <Image
-                      src={option.image}
-                      alt={option.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="p-1 text-xs text-center">{option.name}</div>
-                </div>
-              ))}
-            </div>
-            {selectedValance.hasValance && (
-              <div className="mt-4">
-                <label className="block text-gray-700 mb-2">
-                  Valance Height
-                </label>
-                <div className="flex gap-2">
-                  {measurementUnit === "Ft" ? (
-                    <>
-                      <Input
-                        type="number"
-                        value={valanceHeight}
-                        onChange={(e) =>
-                          setValanceHeight(parseInt(e.target.value) || 0)
-                        }
-                        className="w-full"
-                      />
-                      <div className="ml-2 text-gray-500 w-10">(Ft)</div>
-                    </>
-                  ) : (
-                    <>
-                      <Input
-                        type="number"
-                        value={valanceHeight}
-                        onChange={(e) =>
-                          setValanceHeight(parseInt(e.target.value) || 0)
-                        }
-                        className="w-full"
-                      />
-                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Liner</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-              {linerOptions.map((option, index) => (
-                <div
-                  key={index}
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedLiner.name === option.name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => {
-                    setSelectedLiner(option);
-                    setCurrentImage(option.image);
-                  }}
-                >
-                  <div className="aspect-square">
-                    <Image
-                      src={option.image}
-                      alt={option.name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                  </div>
-                  <div className="p-1 text-xs text-center">{option.name}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="sticky bottom-0 bg-white py-4 border-t border-gray-200 z-10 mt-6">
-          <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold">${price.toFixed(2)}</div>
-            <Button
-              size="lg"
-              className="bg-pink-500 hover:bg-pink-600 text-white px-8 shadow-lg transform hover:-translate-y-1 transition-all duration-200"
-            >
-              Add to Cart
-            </Button>
-          </div>
-        </div>
+          </SheetContent>
+        </Sheet>
       </div>
+      {showPreview && (
+        <>
+          <div className="fixed inset-0 opacity-0 z-40" />
 
-      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-        <DialogContent className="sm:max-w-3xl">
-          <div className="relative w-full aspect-video">
-            {showImageDialog && (
-              <canvas
-                ref={zoomedCanvasRef}
-                className="w-full h-full object-contain border rounded-lg"
-              />
-            )}
-            {!showImageDialog && (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-                <p>Loading preview...</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Sheet open={showFabricSheet} onOpenChange={setShowFabricSheet}>
-        <SheetContent side="right" className="w-full sm:w-1/3 p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Fabric/Texture</h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {fabricTextures.slice(0, 5).map((fabric, index) => (
-              <div
-                key={index}
-                className={`border border-gray-200 rounded-md overflow-hidden cursor-pointer ${
-                  selectedFabric.name === fabric.name
-                    ? "ring-2 ring-pink-500"
-                    : ""
-                }`}
-                onClick={() => {
-                  handleFabricChange(fabric);
-                  setShowFabricSheet(false);
-                }}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="relative w-2/3 h-2/3 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <div className="aspect-square">
-                  <Image
-                    src={fabric.image}
-                    alt={fabric.name}
-                    className="w-full h-full object-cover"
-                    width={48}
-                    height={48}
-                  />
-                </div>
-                <div className="p-2">
-                  <p className="text-sm font-medium">{fabric.name}</p>
-                  <p className="text-sm text-gray-600">
-                    ${fabric.price.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
+                <X className="w-5 h-5 text-gray-700" />
+              </button>
 
-      <Sheet open={showHeadingSheet} onOpenChange={setShowHeadingSheet}>
-        <SheetContent side="right" className="w-full sm:w-1/3 p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium">Heading Styles</h3>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {headingStyles.map((style, index) => (
-              <div
-                key={index}
-                className={`border border-gray-200 rounded-md overflow-hidden cursor-pointer ${
-                  selectedHeading.name === style.name
-                    ? "ring-2 ring-pink-500"
-                    : ""
-                }`}
-                onClick={() => {
-                  setSelectedHeading(style);
-                  setShowHeadingSheet(false);
-                }}
-              >
-                <div className="aspect-square">
-                  <Image
-                    src={style.image}
-                    alt={style.name}
-                    className="w-full h-full object-cover"
-                    width={48}
-                    height={48}
+              <div className="flex-1 flex items-center justify-center p-4 bg-gray-50">
+                {previewImage ? (
+                  <img
+                    src={previewImage}
+                    alt="Custom Curtain Preview"
+                    className="max-w-full max-h-full object-contain"
                   />
-                </div>
-                <div className="p-2">
-                  <p className="text-sm font-medium">{style.name}</p>
-                </div>
+                ) : (
+                  <div className="text-gray-500">
+                    <p>Preview not available</p>
+                  </div>
+                )}
               </div>
-            ))}
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
-    </div>
+        </>
+      )}
+    </>
   );
 }
