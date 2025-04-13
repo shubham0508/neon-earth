@@ -3,13 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   X,
   Minus,
   Plus,
-  Info,
   Star,
   ZoomIn,
   Circle,
@@ -18,6 +16,7 @@ import {
   Ruler,
   ThumbsUp,
   Bolt,
+  ArrowRightIcon,
 } from "lucide-react";
 import {
   Select,
@@ -27,8 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "next/image";
-import { DialogTitle } from "@radix-ui/react-dialog";
-import { Maximize2, ArrowLeft } from "lucide-react";
 
 const mainImages = [
   "/productImages/product1.webp",
@@ -43,54 +40,42 @@ const fabricTextures = [
     image: "/fabricImages/fabric1.webp",
     price: 141.92,
     color: "#f0f0e8",
+    swatch: "/fabricSwatches/swatch1.webp",
   },
   {
     name: "Cruze Tortilla",
     image: "/fabricImages/fabric2.webp",
     price: 141.92,
     color: "#e0d1c3",
+    swatch: "/fabricSwatches/swatch2.webp",
   },
   {
     name: "Charms Frost",
     image: "/fabricImages/fabric3.webp",
     price: 145.92,
     color: "#d2d2d2",
+    swatch: "/fabricSwatches/swatch3.webp",
   },
   {
     name: "Nevada Malabar",
     image: "/fabricImages/fabric4.webp",
     price: 149.92,
     color: "#c8ccc8",
+    swatch: "/fabricSwatches/swatch4.webp",
   },
   {
     name: "Daventry Coconut",
     image: "/fabricImages/fabric5.webp",
     price: 152.92,
     color: "#eeeeea",
+    swatch: "/fabricSwatches/swatch5.webp",
   },
   {
     name: "Austin Desert Tan",
     image: "/fabricImages/fabric6.webp",
     price: 141.92,
     color: "#7f7e74",
-  },
-  {
-    name: "Trivia Cookie",
-    image: "/fabricImages/fabric7.webp",
-    price: 155.92,
-    color: "#8c8a7e",
-  },
-  {
-    name: "Petals Closet",
-    image: "/fabricImages/fabric8.webp",
-    price: 159.92,
-    color: "#bfbeba",
-  },
-  {
-    name: "Cruze Bordeaux",
-    image: "/fabricImages/fabric9.webp",
-    price: 148.92,
-    color: "#9c8e83",
+    swatch: "/fabricSwatches/swatch6.webp",
   },
 ];
 
@@ -99,105 +84,144 @@ const headingStyles = [
     name: "Flat Panel",
     image: "/headingImages/heading1.webp",
     pattern: "flat",
+    price: 0,
   },
   {
     name: "Pinch Pleat",
     image: "/headingImages/heading2.webp",
     pattern: "pinch",
+    price: 12.99,
   },
   {
     name: "Grommet",
     image: "/headingImages/heading3.webp",
     pattern: "grommet",
+    price: 15.99,
   },
   {
     name: "Ripple Folds",
     image: "/headingImages/heading4.webp",
     pattern: "ripple",
+    price: 18.99,
   },
   {
     name: "Tailored Pleats",
     image: "/headingImages/heading5.webp",
     pattern: "tailored",
+    price: 17.99,
   },
-  { name: "Goblet", image: "/headingImages/heading6.webp", pattern: "goblet" },
+  {
+    name: "Goblet",
+    image: "/headingImages/heading6.webp",
+    pattern: "goblet",
+    price: 19.99,
+  },
 ];
 
+const predefinedCombinations = {
+  "Cruze Daizy_Flat Panel": "/customizeImages/customizeImage1.png",
+  "Cruze Tortilla_Pinch Pleat": "/customizeImages/customizeImage2.png",
+  "Charms Frost_Grommet": "/customizeImages/customizeImage3.png",
+};
+
 const placementOptions = [
-  { name: "Window", image: "/placement/placement1.webp" },
-  { name: "Door", image: "/placement/placement2.webp" },
+  { name: "Window", image: "/placement/placement1.webp", price: 3.99 },
+  { name: "Door", image: "/placement/placement2.webp", price: 5.99 },
 ];
 
 const mountOptions = [
-  { name: "Outside", image: "/mount/moun1.webp" },
-  { name: "Inside", image: "/mount/mount2.webp" },
+  { name: "Outside", image: "/mount/moun1.webp", price: 0 },
+  { name: "Inside", image: "/mount/mount2.webp", price: 0 },
 ];
 
 const panelOptions = [
-  { name: "Pair of Panel", image: "/panel/panel1.webp", panels: 2 },
+  {
+    name: "Pair of Panel",
+    image: "/panel/panel1.webp",
+    panels: 2,
+    price: 0,
+  },
   {
     name: "Single Panel (Left)",
     image: "/panel/panel2.webp",
     panels: 1,
     side: "left",
+    price: 7.99,
   },
   {
     name: "Single Panel (Right)",
     image: "/panel/panel3.webp",
     panels: 1,
     side: "right",
+    price: 7.99,
   },
 ];
 
 const tiebackOptions = [
-  { name: "No", image: "/tiebacks/tiebacks1.webp", hasTieback: false },
+  {
+    name: "No",
+    image: "/tiebacks/tiebacks1.webp",
+    hasTieback: false,
+    price: 0,
+  },
   {
     name: "3 Inch Wide Set of 2",
     image: "/tiebacks/tiebacks2.webp",
     hasTieback: true,
+    price: 7.99,
   },
 ];
 
 const valanceOptions = [
-  { name: "No Valance", image: "/valance/valance1.webp", hasValance: false },
+  {
+    name: "No Valance",
+    image: "/valance/valance1.webp",
+    hasValance: false,
+    price: 0,
+  },
   {
     name: "Tailored Pleat Valance",
     image: "/valance/valance2.webp",
     hasValance: true,
     style: "tailored",
+    price: 12.99,
   },
   {
     name: "Inverted Pleat Valance",
     image: "/valance/valance3.webp",
     hasValance: true,
     style: "inverted",
+    price: 14.99,
   },
   {
     name: "Pinch Pleat Valance",
     image: "/valance/valance4.webp",
     hasValance: true,
     style: "pinched",
+    price: 16.99,
   },
 ];
 
 const linerOptions = [
-  { name: "No", image: "/liner/liner1.webp", hasLiner: false },
+  { name: "No", image: "/liner/liner1.webp", hasLiner: false, price: 0 },
   {
     name: "Liner Option 1",
     image: "/liner/liner2.webp",
     hasLiner: true,
     density: "light",
+    price: 15.99,
   },
   {
     name: "Liner Option 2",
     image: "/liner/liner3.webp",
     hasLiner: true,
     density: "heavy",
+    price: 19.99,
   },
 ];
 
 export default function ProductSpecification() {
-  const [currentImage, setCurrentImage] = useState(mainImages[0]);
+  const [currentImage, setCurrentImage] = useState();
   const [width, setWidth] = useState(48);
   const [height, setHeight] = useState(48);
   const [widthInches, setWidthInches] = useState(6);
@@ -215,66 +239,53 @@ export default function ProductSpecification() {
   const [selectedTieback, setSelectedTieback] = useState(tiebackOptions[0]);
   const [selectedValance, setSelectedValance] = useState(valanceOptions[0]);
   const [selectedLiner, setSelectedLiner] = useState(linerOptions[0]);
-  const [showImageDialog, setShowImageDialog] = useState(false);
   const [showFabricSheet, setShowFabricSheet] = useState(false);
   const [measurementUnit, setMeasurementUnit] = useState("Inch");
   const [valanceHeight, setValanceHeight] = useState(1);
-  const [showDimensions, setShowDimensions] = useState(true);
   const [currentBackground, setCurrentBackground] = useState(0);
-  const [dimensionError, setDimensionError] = useState(false);
   const [showHeadingSheet, setShowHeadingSheet] = useState(false);
-  const [canvasLoading, setCanvasLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [hasCustomDimensions, setHasCustomDimensions] = useState(false);
+  const [displayWidth, setDisplayWidth] = useState(width);
+  const [displayHeight, setDisplayHeight] = useState(height);
+  const [displayWidthInches, setDisplayWidthInches] = useState(widthInches);
+  const [displayHeightInches, setDisplayHeightInches] = useState(heightInches);
 
-  const rightContainerRef = useRef(null);
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null);
-  const zoomedCanvasRef = useRef(null);
 
   useEffect(() => {
-    if (showImageDialog && zoomedCanvasRef.current) {
-      const zoomedCanvas = zoomedCanvasRef.current;
-      const ctx = zoomedCanvas.getContext("2d");
+    const widthInInches =
+      measurementUnit === "Ft"
+        ? displayWidth * 12 + displayWidthInches
+        : displayWidth;
+    const heightInInches =
+      measurementUnit === "Ft"
+        ? displayHeight * 12 + displayHeightInches
+        : displayHeight;
 
-      // Set canvas dimensions (important!)
-      zoomedCanvas.width = zoomedCanvas.clientWidth;
-      zoomedCanvas.height = zoomedCanvas.clientHeight;
+    const safeWidthInInches = Math.max(1, widthInInches);
+    const safeHeightInInches = Math.max(1, heightInInches);
 
-      // Clear canvas
-      ctx.clearRect(0, 0, zoomedCanvas.width, zoomedCanvas.height);
+    if (canvasContainerRef.current) {
+      const aspectRatio = widthInInches / heightInInches;
+      canvasContainerRef.current.style.aspectRatio = `${aspectRatio}`;
+    }
 
-      // Calculate dimensions
-      let totalWidthInches, totalHeightInches;
-      if (measurementUnit === "Inch") {
-        totalWidthInches = width;
-        totalHeightInches = height;
-      } else {
-        totalWidthInches = width * 12 + widthInches;
-        totalHeightInches = height * 12 + heightInches;
-      }
+    if (hasCustomDimensions) {
+      drawCurtainCanvas();
+    }
 
-      // Draw curtain with higher detail
-      const aspectRatio = totalHeightInches / totalWidthInches;
-      const curtainWidth = zoomedCanvas.width * 0.8;
-      const curtainHeight = curtainWidth * aspectRatio;
-
-      const curtainX = (zoomedCanvas.width - curtainWidth) / 2;
-      const curtainY = (zoomedCanvas.height - curtainHeight) / 2;
-
-      // Draw curtain components
-      drawCurtainComponents(
-        ctx,
-        curtainX,
-        curtainY,
-        curtainWidth,
-        curtainHeight,
-        totalWidthInches,
-        totalHeightInches
-      );
+    if (
+      hasCustomDimensions &&
+      currentImage === null &&
+      safeWidthInInches > 0 &&
+      safeHeightInInches > 0
+    ) {
+      drawCurtainCanvas();
     }
   }, [
-    showImageDialog,
     width,
     height,
     widthInches,
@@ -282,539 +293,242 @@ export default function ProductSpecification() {
     measurementUnit,
     selectedFabric,
     selectedHeading,
-    selectedPanel,
-    selectedValance,
-    valanceHeight,
-    selectedTieback,
-    selectedMount,
-  ]);
-
-  useEffect(() => {
-    setWidth(48);
-    setHeight(48);
-    setWidthInches(6);
-    setHeightInches(0);
-  }, []);
-
-  useEffect(() => {
-    setCanvasLoading(true);
-    const timer = setTimeout(() => {
-      drawCurtainCanvas();
-      setCanvasLoading(false);
-    }, 10);
-    return () => clearTimeout(timer);
-  }, [
-    width,
-    height,
-    widthInches,
-    heightInches,
-    measurementUnit,
-    selectedFabric,
-    selectedHeading,
-    selectedPanel,
-    selectedValance,
-    valanceHeight,
-    selectedTieback,
-    selectedMount,
     currentBackground,
+    hasCustomDimensions,
   ]);
+
+  useEffect(() => {
+    if (hasCustomDimensions) {
+      setCurrentImage(null);
+      setTimeout(() => {
+        if (canvasRef.current && canvasContainerRef.current) {
+          drawCurtainCanvas();
+        }
+      }, 50);
+    } else {
+      setCurrentImage(mainImages[currentBackground]);
+    }
+  }, [hasCustomDimensions]);
+
+  useEffect(() => {
+    if (!hasCustomDimensions) {
+      setCurrentImage(mainImages[currentBackground]);
+    }
+  }, [currentBackground, hasCustomDimensions]);
+
+  useEffect(() => {
+    if (hasCustomDimensions) {
+      drawCurtainCanvas();
+    }
+  }, [selectedFabric, selectedHeading]);
 
   const captureCanvasImage = () => {
     if (!canvasRef.current) return;
-
-    // Capture the current canvas as an image
     const dataUrl = canvasRef.current.toDataURL("image/png");
     setPreviewImage(dataUrl);
     setShowPreview(true);
   };
 
   useEffect(() => {
-    if (showImageDialog && zoomedCanvasRef.current) {
-      // Add a small delay to ensure the dialog is rendered before drawing
-      const timer = setTimeout(() => {
-        drawZoomedCanvas();
-        setCanvasLoading(false);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [showImageDialog]);
-
-  useEffect(() => {
     setPrice(basePrice * quantity);
   }, [quantity, basePrice]);
 
-  useEffect(() => {
-    drawCurtainCanvas();
-  }, [
-    width,
-    height,
-    widthInches,
-    heightInches,
-    measurementUnit,
-    selectedFabric,
-    selectedHeading,
-    selectedPanel,
-    selectedValance,
-    valanceHeight,
-    selectedTieback,
-    selectedMount,
-    currentBackground,
-  ]);
-
   const handleFabricChange = (fabric) => {
     setSelectedFabric(fabric);
-    setBasePrice(fabric.price);
+    setBasePrice(calculateTotalBasePrice(fabric));
+    if (hasCustomDimensions) {
+      setTimeout(() => drawCurtainCanvas(), 50);
+    }
   };
 
   const handleMeasurementUnitChange = (value) => {
-    setMeasurementUnit(value);
-    if (value === "Ft" && measurementUnit === "Inch") {
-      const feetWidth = Math.floor(width / 12);
-      const inchesWidth = width % 12;
+    const currentWidth = width;
+    const currentHeight = height;
+    const currentWidthInches = widthInches;
+    const currentHeightInches = heightInches;
+    const currentMeasurementUnit = measurementUnit;
+
+    if (value === "Ft" && currentMeasurementUnit === "Inch") {
+      const feetWidth = Math.floor(currentWidth / 12);
+      const inchesWidth = currentWidth % 12;
+      const feetHeight = Math.floor(currentHeight / 12);
+      const inchesHeight = currentHeight % 12;
+
       setWidth(feetWidth);
       setWidthInches(inchesWidth);
-
-      const feetHeight = Math.floor(height / 12);
-      const inchesHeight = height % 12;
       setHeight(feetHeight);
       setHeightInches(inchesHeight);
-    } else if (value === "Inch" && measurementUnit === "Ft") {
-      setWidth(width * 12 + widthInches);
-      setHeight(height * 12 + heightInches);
+
+      setDisplayWidth(feetWidth);
+      setDisplayWidthInches(inchesWidth);
+      setDisplayHeight(feetHeight);
+      setDisplayHeightInches(inchesHeight);
+    } else if (value === "Inch" && currentMeasurementUnit === "Ft") {
+      const totalWidthInches = currentWidth * 12 + currentWidthInches;
+      const totalHeightInches = currentHeight * 12 + currentHeightInches;
+
+      setWidth(totalWidthInches);
       setWidthInches(0);
+      setHeight(totalHeightInches);
       setHeightInches(0);
+
+      setDisplayWidth(totalWidthInches);
+      setDisplayWidthInches(0);
+      setDisplayHeight(totalHeightInches);
+      setDisplayHeightInches(0);
     }
+
+    setMeasurementUnit(value);
   };
 
   const drawCurtainCanvas = () => {
     if (!canvasRef.current || !canvasContainerRef.current) return;
 
-    const containerWidth = canvasContainerRef.current.clientWidth;
-    const containerHeight = containerWidth;
+    const canvas = canvasRef.current;
+    const container = canvasContainerRef.current;
 
-    canvasRef.current.width = containerWidth;
-    canvasRef.current.height = containerHeight;
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
 
-    const ctx = canvasRef.current.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = containerWidth * dpr;
+    canvas.height = containerHeight * dpr;
+    canvas.style.width = `${containerWidth}px`;
+    canvas.style.height = `${containerHeight}px`;
+
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, containerWidth, containerHeight);
 
-    let totalWidthInches, totalHeightInches;
-    if (measurementUnit === "Inch") {
-      totalWidthInches = width;
-      totalHeightInches = height;
-    } else {
-      totalWidthInches = width * 12 + widthInches;
-      totalHeightInches = height * 12 + heightInches;
-    }
+    const widthInInches =
+      measurementUnit === "Ft"
+        ? displayWidth * 12 + displayWidthInches
+        : displayWidth;
+    const heightInInches =
+      measurementUnit === "Ft"
+        ? displayHeight * 12 + displayHeightInches
+        : displayHeight;
 
-    const backgroundImage = new window.Image();
-    backgroundImage.onload = () => {
-      ctx.drawImage(backgroundImage, 0, 0, containerWidth, containerHeight);
+    const combinationKey = `${selectedFabric.name}_${selectedHeading.name}`;
+    const curtainImageSrc =
+      predefinedCombinations[combinationKey] || selectedFabric.image;
 
-      const wallWidth = containerWidth * 0.85;
-      const wallHeight = containerHeight * 0.75;
+    const curtainImage = new window.Image();
+    curtainImage.crossOrigin = "anonymous";
+    curtainImage.onload = () => {
+      const windowAreaX = containerWidth * 0.15;
+      const windowAreaY = containerHeight * 0.1;
+      const windowAreaWidth = containerWidth * 0.7;
+      const windowAreaHeight = containerHeight * 0.8;
 
-      const aspectRatio = totalHeightInches / totalWidthInches;
-      const curtainWidth = Math.min(
-        wallWidth,
-        (totalWidthInches / 120) * wallWidth
+      const scaleX = windowAreaWidth / widthInInches;
+      const scaleY = windowAreaHeight / heightInInches;
+      const scale = Math.min(scaleX, scaleY);
+
+      const curtainWidthPx = widthInInches * scale;
+      const curtainHeightPx = heightInInches * scale;
+
+      const offsetX = windowAreaX + (windowAreaWidth - curtainWidthPx) / 2;
+      const offsetY = windowAreaY + (windowAreaHeight - curtainHeightPx) / 2;
+
+      ctx.drawImage(
+        curtainImage,
+        offsetX,
+        offsetY,
+        curtainWidthPx,
+        curtainHeightPx
       );
-      const curtainHeight = curtainWidth * aspectRatio;
 
-      const curtainX = (containerWidth - curtainWidth) / 2;
-      const curtainY = containerHeight * 0.15;
-
-      drawCurtainComponents(
+      drawDimensionLines(
         ctx,
-        curtainX,
-        curtainY,
-        curtainWidth,
-        curtainHeight,
-        totalWidthInches,
-        totalHeightInches
+        containerWidth,
+        containerHeight,
+        widthInInches,
+        heightInInches
       );
     };
 
-    backgroundImage.src = mainImages[currentBackground];
+    curtainImage.src = curtainImageSrc;
   };
 
-  const drawCurtainComponents = (
-    ctx,
-    curtainX,
-    curtainY,
-    curtainWidth,
-    curtainHeight,
-    totalWidthInches,
-    totalHeightInches
-  ) => {
-    ctx.fillStyle = "#5a3921";
-    ctx.fillRect(curtainX - 20, curtainY - 10, curtainWidth + 40, 10);
+  const drawDimensionLines = (ctx, canvasWidth, canvasHeight) => {
+    const widthInInches =
+      measurementUnit === "Ft"
+        ? displayWidth * 12 + displayWidthInches
+        : displayWidth;
+    const heightInInches =
+      measurementUnit === "Ft"
+        ? displayHeight * 12 + displayHeightInches
+        : displayHeight;
+
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "black";
+
+    const topLineY = 30;
+    ctx.beginPath();
+    ctx.moveTo(20, topLineY);
+    ctx.lineTo(canvasWidth - 20, topLineY);
+    ctx.stroke();
+
+    drawArrow(ctx, 20, topLineY, 40, topLineY);
+    drawArrow(ctx, canvasWidth - 20, topLineY, canvasWidth - 40, topLineY);
+
+    const widthLabel =
+      measurementUnit === "Ft"
+        ? `${width}ft ${widthInches}in`
+        : `${widthInInches} Inch`;
+    ctx.fillText(widthLabel, canvasWidth / 2 - 40, topLineY - 10);
+
+    const rightLineX = canvasWidth - 30;
+    ctx.beginPath();
+    ctx.moveTo(rightLineX, 60);
+    ctx.lineTo(rightLineX, canvasHeight - 60);
+    ctx.stroke();
+
+    drawArrow(ctx, rightLineX, 60, rightLineX, 80);
+    drawArrow(
+      ctx,
+      rightLineX,
+      canvasHeight - 60,
+      rightLineX,
+      canvasHeight - 80
+    );
+
+    const heightLabel =
+      measurementUnit === "Ft"
+        ? `${height}ft ${heightInches}in`
+        : `${heightInInches} Inch`;
+    ctx.save();
+    ctx.translate(rightLineX + 20, canvasHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(heightLabel, 0, 0);
+    ctx.restore();
+  };
+
+  const drawArrow = (ctx, fromX, fromY, toX, toY) => {
+    const headLength = 10;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
 
     ctx.beginPath();
-    ctx.arc(curtainX - 15, curtainY - 5, 10, 0, Math.PI * 2);
-    ctx.arc(curtainX + curtainWidth + 15, curtainY - 5, 10, 0, Math.PI * 2);
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.stroke();
+
+    // Arrow head
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(
+      toX - headLength * Math.cos(angle - Math.PI / 6),
+      toY - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+      toX - headLength * Math.cos(angle + Math.PI / 6),
+      toY - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
     ctx.fill();
-
-    drawValance(
-      ctx,
-      curtainX,
-      curtainY,
-      curtainWidth,
-      curtainHeight,
-      totalHeightInches
-    );
-    drawCurtainPanels(ctx, curtainX, curtainY, curtainWidth, curtainHeight);
-
-    if (showDimensions) {
-      drawDimensions(
-        ctx,
-        curtainX,
-        curtainY,
-        curtainWidth,
-        curtainHeight,
-        totalWidthInches,
-        totalHeightInches
-      );
-    }
-  };
-
-  const drawValance = (
-    ctx,
-    curtainX,
-    curtainY,
-    curtainWidth,
-    curtainHeight,
-    totalHeightInches
-  ) => {
-    if (selectedValance.hasValance) {
-      const valanceHeightPixels =
-        (valanceHeight / totalHeightInches) * curtainHeight;
-      ctx.fillStyle = selectedFabric.color;
-      ctx.fillRect(curtainX, curtainY, curtainWidth, valanceHeightPixels);
-
-      // Add valance details based on style
-      ctx.fillStyle = "rgba(0,0,0,0.1)";
-      if (selectedValance.style === "tailored") {
-        for (let i = 0; i < curtainWidth; i += 20) {
-          ctx.fillRect(curtainX + i, curtainY, 10, valanceHeightPixels);
-        }
-      } else if (selectedValance.style === "pinched") {
-        for (let i = 0; i < curtainWidth; i += 40) {
-          ctx.fillRect(curtainX + i, curtainY, 2, valanceHeightPixels);
-          ctx.fillRect(curtainX + i + 5, curtainY, 2, valanceHeightPixels);
-          ctx.fillRect(curtainX + i + 10, curtainY, 2, valanceHeightPixels);
-        }
-      }
-    }
-  };
-
-  // Draw curtain panels
-  const drawCurtainPanels = (
-    ctx,
-    curtainX,
-    curtainY,
-    curtainWidth,
-    curtainHeight
-  ) => {
-    const panelCount = selectedPanel.panels;
-    const panelWidth = curtainWidth / (panelCount === 2 ? 2 : 1);
-
-    for (let i = 0; i < panelCount; i++) {
-      let panelX;
-
-      if (panelCount === 2) {
-        panelX = curtainX + i * panelWidth;
-      } else if (selectedPanel.side === "left") {
-        panelX = curtainX;
-      } else {
-        panelX = curtainX + curtainWidth - panelWidth;
-      }
-
-      // Main curtain
-      ctx.fillStyle = selectedFabric.color;
-      ctx.fillRect(panelX, curtainY, panelWidth, curtainHeight);
-
-      drawFoldPattern(ctx, panelX, curtainY, panelWidth, curtainHeight);
-      drawTieback(
-        ctx,
-        panelX,
-        curtainY,
-        panelWidth,
-        curtainHeight,
-        i,
-        panelCount
-      );
-    }
-  };
-
-  // Draw fold pattern based on heading style
-  const drawFoldPattern = (
-    ctx,
-    panelX,
-    curtainY,
-    panelWidth,
-    curtainHeight
-  ) => {
-    ctx.fillStyle = "rgba(0,0,0,0.1)";
-
-    switch (selectedHeading.pattern) {
-      case "pinch":
-        for (let x = panelX + 20; x < panelX + panelWidth; x += 40) {
-          ctx.fillRect(x, curtainY, 3, curtainHeight);
-          ctx.fillRect(x + 5, curtainY, 3, curtainHeight);
-          ctx.fillRect(x + 10, curtainY, 3, curtainHeight);
-        }
-        break;
-      case "grommet":
-        for (let x = panelX + 20; x < panelX + panelWidth; x += 40) {
-          ctx.beginPath();
-          ctx.arc(x, curtainY + 15, 8, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        break;
-      case "ripple":
-        ctx.beginPath();
-        ctx.moveTo(panelX, curtainY);
-        for (let x = panelX; x < panelX + panelWidth; x += 20) {
-          ctx.quadraticCurveTo(x + 10, curtainY + 15, x + 20, curtainY);
-        }
-        ctx.lineTo(panelX + panelWidth, curtainHeight + curtainY);
-        ctx.lineTo(panelX, curtainHeight + curtainY);
-        ctx.closePath();
-        ctx.fillStyle = "rgba(0,0,0,0.03)";
-        ctx.fill();
-        break;
-      case "flat":
-      default:
-        for (let x = panelX + 20; x < panelX + panelWidth; x += 40) {
-          ctx.fillRect(x, curtainY, 2, curtainHeight);
-        }
-    }
-  };
-
-  // Draw tieback if selected
-  const drawTieback = (
-    ctx,
-    panelX,
-    curtainY,
-    panelWidth,
-    curtainHeight,
-    panelIndex,
-    panelCount
-  ) => {
-    if (selectedTieback.hasTieback) {
-      const tiebackY = curtainY + curtainHeight * 0.6;
-      ctx.fillStyle = "#5a3921";
-      if (
-        panelIndex === 0 &&
-        (panelCount === 2 || selectedPanel.side === "left")
-      ) {
-        // Left panel tieback
-        ctx.fillRect(panelX + 20, tiebackY, 15, 3);
-        ctx.beginPath();
-        ctx.arc(panelX + 28, tiebackY + 1.5, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      if (
-        panelIndex === 1 ||
-        (panelCount === 1 && selectedPanel.side === "right")
-      ) {
-        // Right panel tieback
-        ctx.fillRect(panelX + panelWidth - 35, tiebackY, 15, 3);
-        ctx.beginPath();
-        ctx.arc(panelX + panelWidth - 28, tiebackY + 1.5, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  };
-
-  // Draw dimensions
-  const drawDimensions = (
-    ctx,
-    curtainX,
-    curtainY,
-    curtainWidth,
-    curtainHeight,
-    totalWidthInches,
-    totalHeightInches
-  ) => {
-    // Format the dimensions text
-    let displayWidth, displayHeight;
-    if (measurementUnit === "Inch") {
-      displayWidth = `${totalWidthInches} in`;
-      displayHeight = `${totalHeightInches} in`;
-    } else {
-      const feet = Math.floor(totalWidthInches / 12);
-      const inches = totalWidthInches % 12;
-      displayWidth = `${feet} ft ${inches} in`;
-
-      const heightFeet = Math.floor(totalHeightInches / 12);
-      const heightInches = totalHeightInches % 12;
-      displayHeight = `${heightFeet} ft ${heightInches} in`;
-    }
-
-    // Draw dimensions with contrasting background for visibility
-    drawDimensionLine(
-      ctx,
-      curtainX,
-      curtainY + curtainHeight + 20,
-      curtainWidth,
-      displayWidth,
-      "horizontal"
-    );
-    drawDimensionLine(
-      ctx,
-      curtainX + curtainWidth + 20,
-      curtainY,
-      curtainHeight,
-      displayHeight,
-      "vertical"
-    );
-  };
-
-  // Helper for drawing dimension lines with better visibility
-  const drawDimensionLine = (ctx, x, y, length, text, orientation) => {
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 1;
-
-    if (orientation === "horizontal") {
-      // Draw dimension line
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + length, y);
-      ctx.stroke();
-
-      // Draw arrows
-      ctx.beginPath();
-      ctx.moveTo(x, y - 5);
-      ctx.lineTo(x, y + 5);
-      ctx.moveTo(x + length, y - 5);
-      ctx.lineTo(x + length, y + 5);
-      ctx.stroke();
-
-      // Draw text with background for better visibility
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      const textWidth = ctx.measureText(text).width + 10;
-      ctx.fillRect(x + length / 2 - textWidth / 2, y + 5, textWidth, 20);
-
-      ctx.fillStyle = "#000";
-      ctx.font = "14px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(text, x + length / 2, y + 20);
-    } else {
-      // Draw vertical dimension line
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x, y + length);
-      ctx.stroke();
-
-      // Draw arrows
-      ctx.beginPath();
-      ctx.moveTo(x - 5, y);
-      ctx.lineTo(x + 5, y);
-      ctx.moveTo(x - 5, y + length);
-      ctx.lineTo(x + 5, y + length);
-      ctx.stroke();
-
-      // Draw text with background for better visibility
-      ctx.save();
-      ctx.translate(x + 20, y + length / 2);
-      ctx.rotate(-Math.PI / 2);
-
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      const textWidth = ctx.measureText(text).width + 10;
-      ctx.fillRect(-textWidth / 2, -20, textWidth, 20);
-
-      ctx.fillStyle = "#000";
-      ctx.textAlign = "center";
-      ctx.fillText(text, 0, -5);
-      ctx.restore();
-    }
-  };
-
-  const drawZoomedCanvas = () => {
-    if (!zoomedCanvasRef.current) return;
-
-    // Make the zoomed canvas larger for better detail
-    const zoomedCanvas = zoomedCanvasRef.current;
-    // Set actual size instead of style
-    zoomedCanvas.width = zoomedCanvas.clientWidth;
-    zoomedCanvas.height = zoomedCanvas.clientHeight;
-
-    const ctx = zoomedCanvas.getContext("2d");
-    ctx.clearRect(0, 0, zoomedCanvas.width, zoomedCanvas.height);
-
-    // Calculate dimensions based on the current settings
-    let totalWidthInches, totalHeightInches;
-    if (measurementUnit === "Inch") {
-      totalWidthInches = width;
-      totalHeightInches = height;
-    } else {
-      totalWidthInches = width * 12 + widthInches;
-      totalHeightInches = height * 12 + heightInches;
-    }
-
-    // Draw the curtain with more detail
-    const aspectRatio = totalHeightInches / totalWidthInches;
-    const curtainWidth = zoomedCanvas.width * 0.8;
-    const curtainHeight = curtainWidth * aspectRatio;
-
-    const curtainX = (zoomedCanvas.width - curtainWidth) / 2;
-    const curtainY = (zoomedCanvas.height - curtainHeight) / 2;
-
-    // Draw with more detail
-    drawCurtainComponents(
-      ctx,
-      curtainX,
-      curtainY,
-      curtainWidth,
-      curtainHeight,
-      totalWidthInches,
-      totalHeightInches
-    );
-  };
-
-  const validateDimensions = (value, type) => {
-    const MIN_WIDTH = 48;
-    const MAX_WIDTH = 300;
-    const MIN_HEIGHT = 12;
-    const MAX_HEIGHT = 240;
-
-    let totalInches;
-
-    if (type === "width") {
-      if (measurementUnit === "Inch") {
-        totalInches = value;
-      } else {
-        totalInches = width * 12 + widthInches;
-      }
-
-      if (totalInches < MIN_WIDTH) {
-        setDimensionError(true);
-        return false;
-      }
-      if (totalInches > MAX_WIDTH) {
-        setDimensionError(true);
-        return false;
-      }
-    } else if (type === "height") {
-      if (measurementUnit === "Inch") {
-        totalInches = value;
-      } else {
-        totalInches = height * 12 + heightInches;
-      }
-
-      if (totalInches < MIN_HEIGHT) {
-        setDimensionError(true);
-        return false;
-      }
-      if (totalInches > MAX_HEIGHT) {
-        setDimensionError(true);
-        return false;
-      }
-    }
-
-    return true;
   };
 
   const handleQuantityChange = (newQuantity) => {
@@ -823,6 +537,56 @@ export default function ProductSpecification() {
     }
   };
 
+  const calculateTotalBasePrice = (fabric = selectedFabric) => {
+    let total = fabric.price;
+    total += selectedHeading.price || 0;
+    total += selectedPlacement.price || 0;
+    total += selectedMount.price || 0;
+    total += selectedPanel.price || 0;
+    total += selectedTieback.price || 0;
+    total += selectedValance.price || 0;
+    total += selectedLiner.price || 0;
+    return total;
+  };
+
+  useEffect(() => {
+    const newBasePrice = calculateTotalBasePrice();
+    setBasePrice(newBasePrice);
+  }, [
+    selectedFabric,
+    selectedHeading,
+    selectedPlacement,
+    selectedMount,
+    selectedPanel,
+    selectedTieback,
+    selectedValance,
+    selectedLiner,
+  ]);
+
+  useEffect(() => {
+    setCurrentImage(mainImages[currentBackground]);
+  }, [currentBackground]);
+
+  const handleFabricHover = (fabric) => {
+    if (!fabric) return;
+    setCurrentImage(fabric.image);
+  };
+
+  const handleFabricLeave = () => {
+    if (hasCustomDimensions) {
+      setCurrentImage(null);
+      drawCurtainCanvas()
+    } else {
+      setCurrentImage(mainImages[currentBackground]);
+    }
+  };
+
+  useEffect(() => {
+    if (hasCustomDimensions) {
+      setCurrentImage(null);
+    }
+  }, [hasCustomDimensions]);
+
   return (
     <>
       <div
@@ -830,7 +594,7 @@ export default function ProductSpecification() {
           showPreview ? "opacity-50 pointer-events-none" : ""
         }`}
       >
-        <div className="w-full lg:w-1/2 p-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto border border-gray-200">
+        <div className="w-full lg:w-1/2 px-4 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
           <div className="flex flex-col md:flex-row gap-4 h-full">
             <div className="flex flex-row md:flex-col gap-2">
               {mainImages.map((img, index) => (
@@ -856,42 +620,56 @@ export default function ProductSpecification() {
               ))}
             </div>
             <div
-              className="relative w-full aspect-square border border-gray-200 rounded-md overflow-hidden"
+              className="relative w-full border border-gray-200 rounded-md overflow-hidden"
               ref={canvasContainerRef}
-              style={{ minHeight: "300px", aspectRatio: "1/1" }}
+              style={{
+                maxHeight: "500px",
+                aspectRatio: `${
+                  measurementUnit === "Ft"
+                    ? displayWidth * 12 + displayWidthInches
+                    : displayWidth
+                } / ${
+                  measurementUnit === "Ft"
+                    ? displayHeight * 12 + displayHeightInches
+                    : displayHeight
+                }`,
+              }}
             >
-              <canvas
-                ref={canvasRef}
-                className="w-full h-full cursor-pointer"
-                onClick={captureCanvasImage}
-                style={{ minHeight: "300px" }}
-              />
-              {/* <div
-              className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-sm font-medium bg-white/80 rounded-full cursor-pointer hover:bg-white"
-              onClick={() => setShowImageDialog(true)}
-            >
-              <div className="flex flex-row gap-2 items-center">
-                <ZoomIn className="w-4 h-4" />
-                <p>Click for personalized view</p>
-              </div>
-            </div> */}
-              <div
-                className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-sm font-medium bg-white/80 rounded-full cursor-pointer hover:bg-white"
-                onClick={captureCanvasImage}
-              >
-                <div className="flex flex-row gap-2 items-center">
-                  <ZoomIn className="w-4 h-4" />
-                  <p>Click for personalized view</p>
-                </div>
-              </div>
+              {hasCustomDimensions && currentImage === null ? (
+                <>
+                  <canvas
+                    ref={canvasRef}
+                    className="w-full h-full cursor-pointer"
+                    onClick={captureCanvasImage}
+                    style={{ minHeight: "300px" }}
+                  />
+
+                  <div
+                    className="absolute bottom-2 left-1/2 transform -translate-x-1/2 px-4 py-1 text-sm font-medium bg-white/80 rounded-full cursor-pointer hover:bg-white"
+                    onClick={captureCanvasImage}
+                  >
+                    <div className="flex flex-row gap-2 items-center">
+                      <ZoomIn className="w-4 h-4" />
+                      <p>Click for personalized view</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                currentImage && (
+                  <Image
+                    src={currentImage}
+                    alt={`Fabric Images`}
+                    className="w-full h-full object-cover rounded"
+                    width={65}
+                    height={65}
+                  />
+                )
+              )}
             </div>
           </div>
         </div>
 
-        <div
-          className="w-full lg:w-1/2 p-4 border border-gray-200 relative"
-          ref={rightContainerRef}
-        >
+        <div className="w-full lg:w-1/2 p-4 border border-gray-200 relative">
           <h1 className="text-xl font-semibold mb-1">
             Custom Drapes - Flat Panel
           </h1>
@@ -974,124 +752,192 @@ export default function ProductSpecification() {
                   <SelectValue placeholder="Select unit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Ft">Ft</SelectItem>
                   <SelectItem value="Inch">Inch</SelectItem>
+                  <SelectItem value="Ft">Ft</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label htmlFor="width" className="block text-gray-700 mb-2">
-                  Width
-                  {measurementUnit === "Ft" && (
-                    <span className="text-pink-600 ml-1">(Ft)</span>
-                  )}
-                  {measurementUnit === "Inch" && (
-                    <span className="text-pink-600 ml-1">(Inch)</span>
-                  )}
-                </label>
-                <div className="flex gap-2">
-                  {measurementUnit === "Ft" && (
-                    <>
+            <div className="mb-6">
+              {measurementUnit === "Inch" && (
+                <div className="flex flex-row justify-between w-full gap-3">
+                  <div className="w-full">
+                    <label htmlFor="width" className="block font-semibold mb-2">
+                      Width{" "}
+                      <span className="text-xs text-pink-600">
+                        ({measurementUnit})
+                      </span>
+                    </label>
+                    <Input
+                      id="width"
+                      type="number"
+                      value={displayWidth}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setDisplayWidth(val);
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setWidth(val);
+                        setDisplayWidth(val);
+                        setHasCustomDimensions(true);
+                        setTimeout(() => drawCurtainCanvas(), 50);
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="w-full">
+                    <label
+                      htmlFor="height"
+                      className="block font-semibold mb-2"
+                    >
+                      Height
+                      {measurementUnit === "Inch" && (
+                        <span className="text-pink-600 ml-1 text-xs">
+                          (Inch)
+                        </span>
+                      )}
+                    </label>
+                    <Input
+                      id="height"
+                      type="number"
+                      value={displayHeight}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setDisplayHeight(val);
+                      }}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        setHeight(val);
+                        setDisplayHeight(val);
+                        setHasCustomDimensions(true);
+                        setTimeout(() => drawCurtainCanvas(), 50);
+                      }}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {measurementUnit === "Ft" && (
+                <div className="w-full align-middle items-center">
+                  <div className="flex flex-row gap-3 align-middle items-center">
+                    <div className="w-full">
+                      <label
+                        htmlFor="width"
+                        className="block font-semibold mb-2"
+                      >
+                        Width{" "}
+                        <span className="text-xs text-pink-600">
+                          ({measurementUnit})
+                        </span>
+                      </label>
+
                       <Input
                         id="width"
                         type="number"
-                        value={width}
+                        value={displayWidth}
                         onChange={(e) => {
-                          const newValue = parseInt(e.target.value) || 0;
-                          if (validateDimensions(newValue, "width")) {
-                            setWidth(newValue);
-                          }
+                          const val = parseInt(e.target.value) || 0;
+                          setDisplayWidth(val);
+                        }}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setWidth(val);
+                          setDisplayWidth(val);
+                          setHasCustomDimensions(true);
+                          setTimeout(() => drawCurtainCanvas(), 50);
                         }}
                         className="w-full"
                       />
-                      <div className="ml-2 text-gray-500 w-10">(Ft)</div>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="widthInches"
+                        className="block font-semibold mb-2"
+                      >
+                        {" "}
+                        <span className="text-xs text-pink-600">(Inch)</span>
+                      </label>
                       <Input
-                        id="inches"
+                        id="widthInches"
                         type="number"
-                        value={widthInches}
-                        onChange={(e) =>
-                          setWidthInches(parseInt(e.target.value) || 0)
-                        }
+                        value={displayWidthInches}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setDisplayWidthInches(val);
+                        }}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setWidthInches(val);
+                          setDisplayWidthInches(val);
+                          setHasCustomDimensions(true);
+                          setTimeout(() => drawCurtainCanvas(), 50);
+                        }}
                         className="w-full"
                       />
-                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                    </>
-                  )}
-                  {measurementUnit === "Inch" && (
-                    <>
-                      <Input
-                        id="width"
-                        type="number"
-                        value={width}
-                        onChange={(e) =>
-                          setWidth(parseInt(e.target.value) || 0)
-                        }
-                        className="w-full"
-                      />
-                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="height" className="block text-gray-700 mb-2">
-                  Height
-                  {measurementUnit === "Ft" && (
-                    <span className="text-pink-600 ml-1">(Ft)</span>
-                  )}
-                  {measurementUnit === "Inch" && (
-                    <span className="text-pink-600 ml-1">(Inch)</span>
-                  )}
-                </label>
-                <div className="flex gap-2">
-                  {measurementUnit === "Ft" && (
-                    <>
-                      <Input
-                        id="height"
-                        type="number"
-                        value={height}
-                        onChange={(e) =>
-                          setHeight(parseInt(e.target.value) || 0)
-                        }
-                        className="w-full"
-                      />
-                      <div className="ml-2 text-gray-500 w-10">(Ft)</div>
+                    </div>
+                    <div className="w-full">
+                      <div>
+                        <label
+                          htmlFor="height"
+                          className="block font-semibold mb-2"
+                        >
+                          Height
+                          <span className="text-pink-600 ml-1 text-xs">
+                            (Ft)
+                          </span>
+                        </label>
+                        <Input
+                          id="height"
+                          type="number"
+                          value={displayHeight}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            setDisplayHeight(val);
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            setHeight(val);
+                            setDisplayHeight(val);
+                            setHasCustomDimensions(true);
+                            setTimeout(() => drawCurtainCanvas(), 50);
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="heightInches"
+                        className="block font-semibold mb-2"
+                      >
+                        <span className="text-pink-600 ml-1 text-xs">
+                          (Inch)
+                        </span>
+                      </label>
                       <Input
                         id="heightInches"
                         type="number"
-                        value={heightInches}
-                        onChange={(e) =>
-                          setHeightInches(parseInt(e.target.value) || 0)
-                        }
+                        value={displayHeightInches}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setDisplayHeightInches(val);
+                        }}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value) || 0;
+                          setHeightInches(val);
+                          setDisplayHeightInches(val);
+                          setHasCustomDimensions(true);
+                          setTimeout(() => drawCurtainCanvas(), 50);
+                        }}
                         className="w-full"
                       />
-                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                    </>
-                  )}
-                  {measurementUnit === "Inch" && (
-                    <>
-                      <Input
-                        id="height"
-                        type="number"
-                        value={height}
-                        onChange={(e) =>
-                          setHeight(parseInt(e.target.value) || 0)
-                        }
-                        className="w-full"
-                      />
-                      <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                    </>
-                  )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              {dimensionError ? (
-                <p className="text-sm text-pink-600">
-                  Allowed Width limit, Min : 4 and Max : 25
-                </p>
-              ) : null}
+              )}
             </div>
           </div>
 
@@ -1134,345 +980,398 @@ export default function ProductSpecification() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Fabric/Texture</label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {fabricTextures.slice(0, 5).map((fabric, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedFabric.name === fabric.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => handleFabricChange(fabric)}
-                    onMouseEnter={() => setCurrentImage(fabric.image)}
-                    onMouseLeave={() => setCurrentImage(selectedFabric.image)}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={fabric.image}
-                        alt={fabric.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
-                    </div>
-                    <div className="p-1 text-xs text-center truncate">
-                      {fabric.name}
-                    </div>
-                    {selectedFabric.name === fabric.name ? (
-                      <div className="text-pink-600 bg-pink-50 mt-1 text-center">
-                        ${fabric.price.toFixed(2)}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
-                <div
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedFabric.name === fabricTextures[5].name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => setShowFabricSheet(true)}
-                >
-                  <div className="aspect-square flex items-center justify-center relative">
-                    <Image
-                      src={fabricTextures[5].image}
-                      alt={fabricTextures[5].name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <Info className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="p-1 text-xs text-center">More</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Heading Style</label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 overflow-x-auto">
-                {headingStyles.slice(0, 5).map((style, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedHeading.name === style.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedHeading(style);
-                      setCurrentImage(style.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={style.image}
-                        alt={style.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
-                    </div>
-                    <div className="p-1 text-xs text-center truncate">
-                      {style.name}
-                    </div>
-                  </div>
-                ))}
-                <div
-                  className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                    selectedHeading.name === headingStyles[5].name
-                      ? "border-pink-500"
-                      : "border-gray-200"
-                  }`}
-                  onClick={() => setShowHeadingSheet(true)}
-                >
-                  <div className="aspect-square flex items-center justify-center relative">
-                    <Image
-                      src={headingStyles[5].image}
-                      alt={headingStyles[5].name}
-                      className="w-full h-full object-cover"
-                      width={48}
-                      height={48}
-                    />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <Info className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                  <div className="p-1 text-xs text-center">More</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2">
-                Placement of Curtain
+              <label className="block mb-2" id="fabric-section">
+                Fabric/Texture
               </label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {fabricTextures.map((fabric, index) => (
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedFabric.name === fabric.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => handleFabricChange(fabric)}
+                      onMouseEnter={(e) => handleFabricHover(fabric, e)}
+                      onMouseLeave={handleFabricLeave}
+                    >
+                      <div className="aspect-square relative">
+                        <Image
+                          src={fabric.image}
+                          alt={fabric.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                        {fabricTextures.length === index + 1 && (
+                          <div
+                            className="absolute inset-0 flex items-center justify-end p-1"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowFabricSheet(true);
+                            }}
+                          >
+                            <ArrowRightIcon className="h-6 w-6 text-black" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-1 text-sm text-center">{fabric.name}</div>
+                    <div
+                      className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                        selectedFabric.name === fabric.name ? "" : "opacity-0"
+                      }`}
+                    >
+                      ${fabric.price.toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block  mb-2">Heading Style</label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {headingStyles.map((style, index) => (
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedHeading.name === style.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => setSelectedHeading(style)}
+                    >
+                      <div className="aspect-square relative">
+                        <Image
+                          src={style.image}
+                          alt={style.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                        {index === 5 && (
+                          <div
+                            className="absolute inset-0 flex items-center justify-end p-1"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowHeadingSheet(true);
+                            }}
+                          >
+                            <ArrowRightIcon className="h-6 w-6 text-black" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-1 text-xs text-center">{style.name}</div>
+                    {style.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedHeading.name === style.name ? "" : "opacity-0"
+                        }`}
+                      >
+                        ${style.price.toFixed(2)}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block  mb-2">Placement of Curtain</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {placementOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedPlacement.name === option.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedPlacement(option);
-                      setCurrentImage(option.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={option.image}
-                        alt={option.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedPlacement.name === option.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => setSelectedPlacement(option)}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={option.image}
+                          alt={option.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
                     </div>
                     <div className="p-1 text-xs text-center">{option.name}</div>
+                    {option.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedPlacement.name === option.name
+                            ? ""
+                            : "opacity-0"
+                        }`}
+                      >
+                        ${option.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Mount Option</label>
+              <label className="block  mb-2">Mount Option</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {mountOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedMount.name === option.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedMount(option);
-                      setCurrentImage(option.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={option.image}
-                        alt={option.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedMount.name === option.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => setSelectedMount(option)}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={option.image}
+                          alt={option.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
                     </div>
                     <div className="p-1 text-xs text-center">{option.name}</div>
+                    {option.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedMount.name === option.name ? "" : "opacity-0"
+                        }`}
+                      >
+                        ${option.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2">
-                Panel Selection
-              </label>
+              <label className="block  mb-2">Panel Selection</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {panelOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedPanel.name === option.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedPanel(option);
-                      setCurrentImage(option.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={option.image}
-                        alt={option.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedPanel.name === option.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => setSelectedPanel(option)}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={option.image}
+                          alt={option.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
                     </div>
                     <div className="p-1 text-xs text-center">{option.name}</div>
+                    {option.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedPanel.name === option.name ? "" : "opacity-0"
+                        }`}
+                      >
+                        ${option.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Tiebacks</label>
+              <label className="block  mb-2">Tiebacks</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {tiebackOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedTieback.name === option.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedTieback(option);
-                      setCurrentImage(option.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={option.image}
-                        alt={option.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedTieback.name === option.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => setSelectedTieback(option)}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={option.image}
+                          alt={option.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
                     </div>
                     <div className="p-1 text-xs text-center">{option.name}</div>
+                    {option.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedTieback.name === option.name
+                            ? ""
+                            : "opacity-0"
+                        }`}
+                      >
+                        ${option.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Valance</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mb-4">
                 {valanceOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedValance.name === option.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedValance(option);
-                      setCurrentImage(option.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={option.image}
-                        alt={option.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedValance.name === option.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => setSelectedValance(option)}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={option.image}
+                          alt={option.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
                     </div>
                     <div className="p-1 text-xs text-center">{option.name}</div>
+                    {option.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedValance.name === option.name
+                            ? ""
+                            : "opacity-0"
+                        }`}
+                      >
+                        ${option.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
               {selectedValance.hasValance && (
-                <div className="mt-4">
-                  <label className="block text-gray-700 mb-2">
-                    Valance Height
-                  </label>
-                  <div className="flex gap-2">
-                    {measurementUnit === "Ft" ? (
-                      <>
-                        <Input
-                          type="number"
-                          value={valanceHeight}
-                          onChange={(e) =>
-                            setValanceHeight(parseInt(e.target.value) || 0)
-                          }
-                          className="w-full"
-                        />
-                        <div className="ml-2 text-gray-500 w-10">(Ft)</div>
-                      </>
-                    ) : (
-                      <>
-                        <Input
-                          type="number"
-                          value={valanceHeight}
-                          onChange={(e) =>
-                            setValanceHeight(parseInt(e.target.value) || 0)
-                          }
-                          className="w-full"
-                        />
-                        <div className="ml-2 text-gray-500 w-10">(Inch)</div>
-                      </>
-                    )}
+                <div className="mt-4 bg-gray-100 p-4 rounded-md">
+                  <div className="flex flex-row gap-3">
+                    <div className="mr-3">
+                      <label className="block font-medium mb-2">
+                        Valance Height{" "}
+                        <span className="text-pink-600 text-sm">
+                          ({measurementUnit})
+                        </span>
+                      </label>
+                      <Input
+                        type="number"
+                        value={valanceHeight}
+                        onChange={(e) =>
+                          setValanceHeight(parseInt(e.target.value) || 0)
+                        }
+                        className="w-full bg-white"
+                      />
+                    </div>
+                    <span className="border-1 mr-3"></span>
+                    <div>
+                      <label className="block font-medium mb-2">
+                        Fabric/Texture
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="border-2 border-pink-500 rounded-md overflow-hidden w-20 h-20">
+                          <Image
+                            src={selectedFabric.image}
+                            alt={selectedFabric.name}
+                            className="w-full h-full object-cover"
+                            width={74}
+                            height={74}
+                          />
+                        </div>
+                        <div>
+                          <p className="font-medium">{selectedFabric.name}</p>
+                          <p className="text-sm bg-pink-100 p-1 rounded-sm text-center">
+                            ${selectedFabric.price.toFixed(2)}
+                          </p>
+                        </div>
+                        <div
+                          className="ml-2 text-pink-500 underline text-sm cursor-pointer"
+                          onClick={() => {
+                            setShowFabricSheet(true);
+                          }}
+                        >
+                          Change
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Liner</label>
+              <label className="block  mb-2">Liner</label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                 {linerOptions.map((option, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-md cursor-pointer overflow-hidden ${
-                      selectedLiner.name === option.name
-                        ? "border-pink-500"
-                        : "border-gray-200"
-                    }`}
-                    onClick={() => {
-                      setSelectedLiner(option);
-                      setCurrentImage(option.image);
-                    }}
-                  >
-                    <div className="aspect-square">
-                      <Image
-                        src={option.image}
-                        alt={option.name}
-                        className="w-full h-full object-cover"
-                        width={48}
-                        height={48}
-                      />
+                  <div className="flex flex-col gap-1" key={index}>
+                    <div
+                      className={`border-2 rounded-md cursor-pointer overflow-hidden ${
+                        selectedLiner.name === option.name
+                          ? "border-pink-500"
+                          : "border-gray-200"
+                      }`}
+                      onClick={() => {
+                        setSelectedLiner(option);
+                        setCurrentImage(option.image);
+                      }}
+                    >
+                      <div className="aspect-square">
+                        <Image
+                          src={option.image}
+                          alt={option.name}
+                          className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
                     </div>
                     <div className="p-1 text-xs text-center">{option.name}</div>
+                    {option.price > 0 && (
+                      <div
+                        className={`bg-pink-50 text-center rounded-lg text-xs font-semibold py-1 ${
+                          selectedLiner.name === option.name ? "" : "opacity-0"
+                        }`}
+                      >
+                        ${option.price.toFixed(2)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="sticky bottom-0 bg-white py-4 border-t border-gray-200 z-10 mt-6">
+          <div className="sticky bottom-0 bg-white py-4 border-t border-gray-200 z-10 mt-6 shadow-2xl p-5">
             <div className="flex justify-between items-center">
               <div className="text-2xl font-bold">${price.toFixed(2)}</div>
               <Button
@@ -1484,23 +1383,6 @@ export default function ProductSpecification() {
             </div>
           </div>
         </div>
-
-        <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-          <DialogContent className="sm:max-w-3xl">
-            <DialogTitle>Curtain Preview</DialogTitle>
-            <div className="relative w-full aspect-video">
-              <canvas
-                ref={zoomedCanvasRef}
-                className="w-full h-full object-contain border rounded-lg bg-gray-100"
-              />
-              {canvasLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50">
-                  <p>Loading preview...</p>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         <Sheet open={showFabricSheet} onOpenChange={setShowFabricSheet}>
           <SheetContent side="right" className="w-full sm:w-1/3 p-5">
@@ -1580,6 +1462,7 @@ export default function ProductSpecification() {
           </SheetContent>
         </Sheet>
       </div>
+
       {showPreview && (
         <>
           <div className="fixed inset-0 opacity-0 z-40" />
@@ -1588,12 +1471,12 @@ export default function ProductSpecification() {
             <div className="relative w-2/3 h-2/3 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
               <button
                 onClick={() => setShowPreview(false)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5 text-gray-700" />
+                <X className="w-5 h-5 " />
               </button>
 
-              <div className="flex-1 flex items-center justify-center p-4 bg-gray-50">
+              <div className="flex-1 flex items-center justify-center bg-gray-50 overflow-auto p-2">
                 {previewImage ? (
                   <img
                     src={previewImage}

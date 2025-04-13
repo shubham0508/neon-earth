@@ -35,12 +35,12 @@ const Header = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <header className="border-b border-gray-200 px-4 sm:px-6">
-        <div className="container mx-auto py-4">
+      <header className="border-b border-gray-200">
+        <div className="container mx-auto py-4 border-b border-gray-200 w-full px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4">
-            <div className="flex items-center w-full md:w-auto justify-between md:justify-start md:mr-4">
+            <div className="flex items-center w-full md:w-auto md:justify-start md:mr-4">
               <Link href="/" className="flex items-center">
-                <div className="relative h-10 w-[150px]">
+                <div className="relative h-15 w-[150px] ml-10">
                   <Image
                     src="/logo/companyLogo.webp"
                     alt="Neon Earth Logo"
@@ -66,7 +66,7 @@ const Header = () => {
               <Input
                 type="text"
                 placeholder="Find What Brings You Joy"
-                className="pl-3 w-full py-3 sm:py-4 border-2 sm:border-[3px] border-gray-200 hover:outline-none"
+                className="pl-3 w-full py-3 sm:py-5 border-3 sm:border-[5px] border-gray-200 hover:outline-none"
               />
               <Button
                 className="absolute right-0 top-0 h-full w-12 bg-pink-500 text-white hover:bg-pink-700 cursor-pointer"
@@ -76,7 +76,7 @@ const Header = () => {
               </Button>
             </div>
 
-            <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
+            <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
               <div className="relative p-1 hover:bg-gray-100 rounded-full cursor-pointer">
                 <Heart className="h-5 w-5 text-gray-600 hover:text-pink-500" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
