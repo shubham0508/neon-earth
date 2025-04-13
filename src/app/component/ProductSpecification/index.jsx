@@ -568,17 +568,15 @@ export default function ProductSpecification() {
   }, [currentBackground]);
 
   const handleFabricHover = (fabric) => {
-    if (!fabric) return;
+    if (!fabric || hasCustomDimensions) return;
     setCurrentImage(fabric.image);
   };
 
   const handleFabricLeave = () => {
-    if (hasCustomDimensions) {
-      setCurrentImage(null);
-      drawCurtainCanvas()
-    } else {
-      setCurrentImage(mainImages[currentBackground]);
+    if (!hasCustomDimensions) {
+      return
     }
+    setCurrentImage(mainImages[currentBackground]);
   };
 
   useEffect(() => {
