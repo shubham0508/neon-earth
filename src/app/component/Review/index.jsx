@@ -153,7 +153,7 @@ const RatingAndReview = () => {
           </div>
         </div>
         <div className="w-full md:w-auto flex justify-end md:justify-start">
-          <Button className="bg-pink-600 hover:bg-pink-700 text-white cursor-pointer ">
+          <Button className="bg-pink-600 hover:bg-pink-700 text-white cursor-pointer">
             Write a Review
           </Button>
         </div>

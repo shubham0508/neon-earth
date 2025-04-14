@@ -50,10 +50,10 @@ const Header = () => {
                 </div>
               </Link>
               <div className="flex items-center space-x-4 md:hidden">
-                <button className="p-1">
+                <button className="p-1" aria-label="Search">
                   <Search className="h-5 w-5 text-gray-600" />
                 </button>
-                <button className="p-1 relative">
+                <button className="p-1 relative" aria-label="Cart">
                   <ShoppingCart className="h-5 w-5 text-gray-600" />
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
                     0

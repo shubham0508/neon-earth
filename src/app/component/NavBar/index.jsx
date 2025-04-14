@@ -257,7 +257,7 @@ const NavBar = () => {
                 >
                   <Image
                     src={item.icon}
-                    alt={item.title}
+                    alt={`Nav ${item.title}`}
                     width={60}
                     height={60}
                     className={item.isCircle ? "invert" : ""}
@@ -365,7 +365,7 @@ const NavBar = () => {
                     >
                       <Image
                         src={item.icon}
-                        alt={item.title}
+                        alt={`Nav ${item.title}`}
                         width={24}
                         height={24}
                         className={item.isCircle ? "invert" : ""}

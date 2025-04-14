@@ -1467,12 +1467,13 @@ export default function ProductSpecification() {
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="relative w-2/3 h-2/3 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
-              <button
+              <Button
                 onClick={() => setShowPreview(false)}
                 className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                aria-label="Close the preview section"
               >
                 <X className="w-5 h-5 " />
-              </button>
+              </Button>
 
               <div className="flex-1 flex items-center justify-center bg-gray-50 overflow-auto p-2">
                 {previewImage ? (
