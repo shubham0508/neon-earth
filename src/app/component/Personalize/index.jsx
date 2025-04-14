@@ -130,7 +130,7 @@ const ProductCarousel = () => {
         </Swiper>
 
         <div className="mt-8 text-center">
-          <Button className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-5 px-8 rounded-md transition duration-300 ease-in-out cursor-pointer">
+          <Button className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-5 px-8 rounded-md transition duration-300 ease-in-out cursor-pointer">
             Start Creating
           </Button>
         </div>

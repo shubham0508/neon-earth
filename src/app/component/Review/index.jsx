@@ -75,7 +75,7 @@ const renderStars = (rating, totalStars = 5) => {
 
   for (let i = 0; i < fullStars; i++) {
     stars.push(
-      <Star key={`full-${i}`} className="w-10 h-10 text-pink-700 fill-pink-500" />
+      <Star key={`full-${i}`} className="w-10 h-10 text-pink-500 fill-pink-500" />
     );
   }
   for (let i = 0; i < emptyStars; i++) {
@@ -134,7 +134,7 @@ const RatingAndReview = () => {
                       key={i}
                       className={`w-10 h-10 ${
                         i < item.stars
-                          ? "text-pink-700 fill-pink-500"
+                          ? "text-pink-500 fill-pink-500"
                           : "text-gray-300 fill-gray-300"
                       }`}
                     />

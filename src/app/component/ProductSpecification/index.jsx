@@ -660,6 +660,8 @@ export default function ProductSpecification() {
                     className="w-full h-full object-cover rounded"
                     width={65}
                     height={65}
+                    loading="eager"
+                    priority
                   />
                 )
               )}
