@@ -678,12 +678,12 @@ export default function ProductSpecification() {
                 .map((_, i) => (
                   <Star
                     key={i}
-                    className="w-4 h-4 text-pink-600 fill-pink-500"
+                    className="w-4 h-4 text-pink-700 fill-pink-500"
                   />
                 ))}
               <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
             </div>
-            <span className="ml-2 text-sm text-pink-600">21 reviews</span>
+            <span className="ml-2 text-sm text-pink-700">21 reviews</span>
           </div>
           <div className="text-xl font-semibold mb-4">${price.toFixed(2)}</div>
 
@@ -700,37 +700,37 @@ export default function ProductSpecification() {
           <div className="grid grid-cols-2 gap-y-4 mb-6 mt-5">
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-                <Bolt className="w-4 h-4 text-pink-600" />
+                <Bolt className="w-4 h-4 text-pink-700" />
               </div>
               <span>Blended woven polyester</span>
             </div>
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-                <Circle className="w-4 h-4 text-pink-600" />
+                <Circle className="w-4 h-4 text-pink-700" />
               </div>
               <span>Premium silver eyelets</span>
             </div>
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-                <Shirt className="w-4 h-4 text-pink-600" />
+                <Shirt className="w-4 h-4 text-pink-700" />
               </div>
               <span>Washable fabric</span>
             </div>
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-                <Palette className="w-4 h-4 text-pink-600" />
+                <Palette className="w-4 h-4 text-pink-700" />
               </div>
               <span>Multiple designs & colors</span>
             </div>
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-                <Ruler className="w-4 h-4 text-pink-600" />
+                <Ruler className="w-4 h-4 text-pink-700" />
               </div>
               <span>Customizable sizes</span>
             </div>
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-pink-100 flex items-center justify-center mr-2">
-                <ThumbsUp className="w-4 h-4 text-pink-600" />
+                <ThumbsUp className="w-4 h-4 text-pink-700" />
               </div>
               <span>Easy installation</span>
             </div>
@@ -762,7 +762,7 @@ export default function ProductSpecification() {
                   <div className="w-full">
                     <label htmlFor="width" className="block font-semibold mb-2">
                       Width{" "}
-                      <span className="text-xs text-pink-600">
+                      <span className="text-xs text-pink-700">
                         ({measurementUnit})
                       </span>
                     </label>
@@ -792,7 +792,7 @@ export default function ProductSpecification() {
                     >
                       Height
                       {measurementUnit === "Inch" && (
-                        <span className="text-pink-600 ml-1 text-xs">
+                        <span className="text-pink-700 ml-1 text-xs">
                           (Inch)
                         </span>
                       )}
@@ -827,7 +827,7 @@ export default function ProductSpecification() {
                         className="block font-semibold mb-2"
                       >
                         Width{" "}
-                        <span className="text-xs text-pink-600">
+                        <span className="text-xs text-pink-700">
                           ({measurementUnit})
                         </span>
                       </label>
@@ -856,7 +856,7 @@ export default function ProductSpecification() {
                         className="block font-semibold mb-2"
                       >
                         {" "}
-                        <span className="text-xs text-pink-600">(Inch)</span>
+                        <span className="text-xs text-pink-700">(Inch)</span>
                       </label>
                       <Input
                         id="widthInches"
@@ -883,7 +883,7 @@ export default function ProductSpecification() {
                           className="block font-semibold mb-2"
                         >
                           Height
-                          <span className="text-pink-600 ml-1 text-xs">
+                          <span className="text-pink-700 ml-1 text-xs">
                             (Ft)
                           </span>
                         </label>
@@ -911,7 +911,7 @@ export default function ProductSpecification() {
                         htmlFor="heightInches"
                         className="block font-semibold mb-2"
                       >
-                        <span className="text-pink-600 ml-1 text-xs">
+                        <span className="text-pink-700 ml-1 text-xs">
                           (Inch)
                         </span>
                       </label>
@@ -1278,7 +1278,7 @@ export default function ProductSpecification() {
                     <div className="mr-3">
                       <label className="block font-medium mb-2">
                         Valance Height{" "}
-                        <span className="text-pink-600 text-sm">
+                        <span className="text-pink-700 text-sm">
                           ({measurementUnit})
                         </span>
                       </label>
@@ -1313,7 +1313,7 @@ export default function ProductSpecification() {
                           </p>
                         </div>
                         <div
-                          className="ml-2 text-pink-500 underline text-sm cursor-pointer"
+                          className="ml-2 text-pink-700 underline text-sm cursor-pointer"
                           onClick={() => {
                             setShowFabricSheet(true);
                           }}

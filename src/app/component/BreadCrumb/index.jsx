@@ -8,25 +8,25 @@ const Breadcrumbs = () => {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/" className="text-gray-600 hover:text-pink-500">
+              <BreadcrumbLink href="/" className="text-gray-600 hover:text-pink-700">
                 Home
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator>/</BreadcrumbSeparator>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/curtains" className="text-gray-600 hover:text-pink-500">
+              <BreadcrumbLink href="/curtains" className="text-gray-600 hover:text-pink-700">
                 Curtains
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator>/</BreadcrumbSeparator>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/curtains/custom-drapes" className="text-gray-600 hover:text-pink-500">
+              <BreadcrumbLink href="/curtains/custom-drapes" className="text-gray-600 hover:text-pink-700">
                 Custom Drapes
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator>/</BreadcrumbSeparator>
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-pink-500">
+              <BreadcrumbPage className="text-pink-700">
                 Custom Drapes
               </BreadcrumbPage>
             </BreadcrumbItem>

@@ -248,7 +248,7 @@ const NavBar = () => {
             >
               <Link
                 href={item.href || "#"}
-                className="flex flex-col items-center px-2 py-2 text-center hover:text-pink-500 transition-colors"
+                className="flex flex-col items-center px-2 py-2 text-center hover:text-pink-700 transition-colors"
               >
                 <div
                   className={`w-16 h-16 flex items-center justify-center ${
@@ -285,9 +285,9 @@ const NavBar = () => {
                         >
                           <Link
                             href={child.href}
-                            className={`px-6 py-2 text-sm hover:text-pink-500 flex justify-between items-center ${
+                            className={`px-6 py-2 text-sm hover:text-pink-700 flex justify-between items-center ${
                               activeSubMenu === child.title
-                                ? "text-pink-500"
+                                ? "text-pink-700"
                                 : "text-gray-700"
                             }`}
                           >
@@ -312,7 +312,7 @@ const NavBar = () => {
                                   <Link
                                     key={subItem.title}
                                     href={subItem.href}
-                                    className="block px-6 py-2 text-sm text-gray-700 hover:text-pink-500"
+                                    className="block px-6 py-2 text-sm text-gray-700 hover:text-pink-700"
                                   >
                                     {subItem.title}
                                   </Link>
@@ -324,7 +324,7 @@ const NavBar = () => {
                       </div>
                       <div className="text-center mb-4">
                         <h3 className="text-gray-700">Discover our</h3>
-                        <h2 className="text-pink-500 text-xl font-medium">
+                        <h2 className="text-pink-700 text-xl font-medium">
                           {item.title}
                         </h2>
                         <div className="mt-4">
@@ -393,7 +393,7 @@ const NavBar = () => {
                           >
                             <Link
                               href={child.href}
-                              className="block text-sm text-gray-700 hover:text-pink-500"
+                              className="block text-sm text-gray-700 hover:text-pink-700"
                             >
                               {child.title}
                             </Link>
@@ -414,7 +414,7 @@ const NavBar = () => {
                                 <li key={subItem.title}>
                                   <Link
                                     href={subItem.href}
-                                    className="block py-1 text-xs text-gray-600 hover:text-pink-500"
+                                    className="block py-1 text-xs text-gray-600 hover:text-pink-700"
                                   >
                                     {subItem.title}
                                   </Link>

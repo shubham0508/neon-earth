@@ -78,7 +78,7 @@ const Header = () => {
 
             <div className="hidden md:flex items-center space-x-2 lg:space-x-3">
               <div className="relative p-1 hover:bg-gray-100 rounded-full cursor-pointer">
-                <Heart className="h-5 w-5 text-gray-600 hover:text-pink-500" />
+                <Heart className="h-5 w-5 text-gray-600 hover:text-pink-700" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
                   0
                 </span>
@@ -91,7 +91,7 @@ const Header = () => {
               </div>
               <div className="text-gray-700 flex flex-row gap-2 items-center">
                 <User className="h-5 w-5 text-gray-600" />
-                <span className="cursor-pointer hover:text-pink-500 text-sm lg:text-base">
+                <span className="cursor-pointer hover:text-pink-700 text-sm lg:text-base">
                   Join/Login
                 </span>
               </div>

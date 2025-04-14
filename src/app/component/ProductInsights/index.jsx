@@ -62,7 +62,7 @@ export default function ProductInsights() {
                 {insight.description}
                 <Link
                   href={insight.link}
-                  className="text-sm font-sm text-pink-500 ml-1"
+                  className="text-sm font-sm text-pink-700 ml-1"
                 >
                   Read More
                 </Link>

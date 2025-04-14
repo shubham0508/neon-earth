@@ -106,7 +106,7 @@ export function FaqSection() {
         <Button
           variant="outline"
           onClick={toggleShowMore}
-          className="text-pink-600 border-pink-500 hover:text-pink-700 cursor-pointer"
+          className="text-pink-700 border-pink-500 hover:text-pink-700 cursor-pointer"
         >
           {hasMoreFaqs ? "Show More" : "Show Less"}
         </Button>
