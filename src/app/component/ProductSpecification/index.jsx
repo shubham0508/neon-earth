@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   X,
   Minus,
@@ -17,6 +17,7 @@ import {
   ThumbsUp,
   Bolt,
   ArrowRightIcon,
+  Truck,
 } from "lucide-react";
 import {
   Select,
@@ -241,7 +242,7 @@ export default function ProductSpecification() {
   const [selectedLiner, setSelectedLiner] = useState(linerOptions[0]);
   const [showFabricSheet, setShowFabricSheet] = useState(false);
   const [measurementUnit, setMeasurementUnit] = useState("Inch");
-  const [valanceHeight, setValanceHeight] = useState(1);
+  const [valanceHeight, setValanceHeight] = useState(12);
   const [currentBackground, setCurrentBackground] = useState(0);
   const [showHeadingSheet, setShowHeadingSheet] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -251,9 +252,36 @@ export default function ProductSpecification() {
   const [displayHeight, setDisplayHeight] = useState(height);
   const [displayWidthInches, setDisplayWidthInches] = useState(widthInches);
   const [displayHeightInches, setDisplayHeightInches] = useState(heightInches);
+  const [measurementError, setMeasurementError] = useState();
+  const [isCanvasLoading, setIsCanvasLoading] = useState(false);
 
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null);
+
+  const validateMeasurements = ({ width, height, measurementUnit }) => {
+    if (measurementUnit === "Inch") {
+      if (width < 48 || width > 300) {
+        setMeasurementError("Allowed Width limit, Min : 48 and Max : 300");
+        return false;
+      }
+      if (height < 48 || height > 300) {
+        setMeasurementError("Allowed Height limit, Min : 48 and Max : 300");
+        return false;
+      }
+    } else if (measurementUnit === "Ft") {
+      if (width < 4 || width > 25) {
+        setMeasurementError("Allowed Width limit, Min : 4 and Max : 25");
+        return false;
+      }
+      if (height < 4 || height > 25) {
+        setMeasurementError("Allowed Height limit, Min : 4 and Max : 25");
+        return false;
+      }
+    }
+
+    setMeasurementError("");
+    return true;
+  };
 
   useEffect(() => {
     const widthInInches =
@@ -265,62 +293,33 @@ export default function ProductSpecification() {
         ? displayHeight * 12 + displayHeightInches
         : displayHeight;
 
-    const safeWidthInInches = Math.max(1, widthInInches);
-    const safeHeightInInches = Math.max(1, heightInInches);
+    const isValid = validateMeasurements({
+      width: displayWidth,
+      height: displayHeight,
+      measurementUnit,
+    });
 
-    if (canvasContainerRef.current) {
+    if (canvasContainerRef.current && isValid) {
       const aspectRatio = widthInInches / heightInInches;
       canvasContainerRef.current.style.aspectRatio = `${aspectRatio}`;
     }
-
-    if (hasCustomDimensions) {
-      drawCurtainCanvas();
-    }
-
-    if (
-      hasCustomDimensions &&
-      currentImage === null &&
-      safeWidthInInches > 0 &&
-      safeHeightInInches > 0
-    ) {
-      drawCurtainCanvas();
-    }
   }, [
-    width,
-    height,
-    widthInches,
-    heightInches,
     measurementUnit,
     selectedFabric,
     selectedHeading,
     currentBackground,
     hasCustomDimensions,
+    displayWidth,
+    displayHeight,
+    displayWidthInches,
+    displayHeightInches,
   ]);
-
-  useEffect(() => {
-    if (hasCustomDimensions) {
-      setCurrentImage(null);
-      setTimeout(() => {
-        if (canvasRef.current && canvasContainerRef.current) {
-          drawCurtainCanvas();
-        }
-      }, 50);
-    } else {
-      setCurrentImage(mainImages[currentBackground]);
-    }
-  }, [hasCustomDimensions]);
 
   useEffect(() => {
     if (!hasCustomDimensions) {
       setCurrentImage(mainImages[currentBackground]);
     }
   }, [currentBackground, hasCustomDimensions]);
-
-  useEffect(() => {
-    if (hasCustomDimensions) {
-      drawCurtainCanvas();
-    }
-  }, [selectedFabric, selectedHeading]);
 
   const captureCanvasImage = () => {
     if (!canvasRef.current) return;
@@ -342,17 +341,11 @@ export default function ProductSpecification() {
   };
 
   const handleMeasurementUnitChange = (value) => {
-    const currentWidth = width;
-    const currentHeight = height;
-    const currentWidthInches = widthInches;
-    const currentHeightInches = heightInches;
-    const currentMeasurementUnit = measurementUnit;
-
-    if (value === "Ft" && currentMeasurementUnit === "Inch") {
-      const feetWidth = Math.floor(currentWidth / 12);
-      const inchesWidth = currentWidth % 12;
-      const feetHeight = Math.floor(currentHeight / 12);
-      const inchesHeight = currentHeight % 12;
+    if (value === "Ft" && measurementUnit === "Inch") {
+      const feetWidth = Math.floor(displayWidth / 12);
+      const inchesWidth = displayWidth % 12;
+      const feetHeight = Math.floor(displayHeight / 12);
+      const inchesHeight = displayHeight % 12;
 
       setWidth(feetWidth);
       setWidthInches(inchesWidth);
@@ -363,9 +356,9 @@ export default function ProductSpecification() {
       setDisplayWidthInches(inchesWidth);
       setDisplayHeight(feetHeight);
       setDisplayHeightInches(inchesHeight);
-    } else if (value === "Inch" && currentMeasurementUnit === "Ft") {
-      const totalWidthInches = currentWidth * 12 + currentWidthInches;
-      const totalHeightInches = currentHeight * 12 + currentHeightInches;
+    } else if (value === "Inch" && measurementUnit === "Ft") {
+      const totalWidthInches = displayWidth * 12 + displayWidthInches;
+      const totalHeightInches = displayHeight * 12 + displayHeightInches;
 
       setWidth(totalWidthInches);
       setWidthInches(0);
@@ -379,27 +372,16 @@ export default function ProductSpecification() {
     }
 
     setMeasurementUnit(value);
+    setHasCustomDimensions(true);
+
+    setTimeout(() => drawCurtainCanvas(), 50);
   };
+
+  const MAX_CANVAS_SIZE = 600; // Max renderable area in px
 
   const drawCurtainCanvas = () => {
     if (!canvasRef.current || !canvasContainerRef.current) return;
-
-    const canvas = canvasRef.current;
-    const container = canvasContainerRef.current;
-
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = containerWidth * dpr;
-    canvas.height = containerHeight * dpr;
-    canvas.style.width = `${containerWidth}px`;
-    canvas.style.height = `${containerHeight}px`;
-
-    const ctx = canvas.getContext("2d");
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, containerWidth, containerHeight);
-
+  
     const widthInInches =
       measurementUnit === "Ft"
         ? displayWidth * 12 + displayWidthInches
@@ -408,29 +390,55 @@ export default function ProductSpecification() {
       measurementUnit === "Ft"
         ? displayHeight * 12 + displayHeightInches
         : displayHeight;
-
+  
+    const isValid = validateMeasurements({
+      width: displayWidth,
+      height: displayHeight,
+      measurementUnit,
+    });
+  
+    if (!isValid || widthInInches <= 0 || heightInInches <= 0) return;
+  
+    setIsCanvasLoading(true);
+  
+    const canvas = canvasRef.current;
+    const container = canvasContainerRef.current;
+  
+    container.style.aspectRatio = `${widthInInches / heightInInches}`;
+  
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+  
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = containerWidth * dpr;
+    canvas.height = containerHeight * dpr;
+    canvas.style.width = `${containerWidth}px`;
+    canvas.style.height = `${containerHeight}px`;
+  
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, containerWidth, containerHeight);
+  
     const combinationKey = `${selectedFabric.name}_${selectedHeading.name}`;
     const curtainImageSrc =
       predefinedCombinations[combinationKey] || selectedFabric.image;
-
+  
     const curtainImage = new window.Image();
     curtainImage.crossOrigin = "anonymous";
     curtainImage.onload = () => {
-      const windowAreaX = containerWidth * 0.15;
-      const windowAreaY = containerHeight * 0.1;
-      const windowAreaWidth = containerWidth * 0.7;
-      const windowAreaHeight = containerHeight * 0.8;
-
-      const scaleX = windowAreaWidth / widthInInches;
-      const scaleY = windowAreaHeight / heightInInches;
-      const scale = Math.min(scaleX, scaleY);
-
+      // Scale the image based on real dimensions
+      const maxInches = Math.max(widthInInches, heightInInches, 100); // Avoid divide-by-zero or tiny rendering
+      const scale = Math.min(
+        (containerWidth * 0.8) / maxInches,
+        (containerHeight * 0.8) / maxInches
+      );
+  
       const curtainWidthPx = widthInInches * scale;
       const curtainHeightPx = heightInInches * scale;
-
-      const offsetX = windowAreaX + (windowAreaWidth - curtainWidthPx) / 2;
-      const offsetY = windowAreaY + (windowAreaHeight - curtainHeightPx) / 2;
-
+  
+      const offsetX = (containerWidth - curtainWidthPx) / 2;
+      const offsetY = (containerHeight - curtainHeightPx) / 2;
+  
       ctx.drawImage(
         curtainImage,
         offsetX,
@@ -438,70 +446,76 @@ export default function ProductSpecification() {
         curtainWidthPx,
         curtainHeightPx
       );
-
+  
       drawDimensionLines(
         ctx,
         containerWidth,
         containerHeight,
         widthInInches,
-        heightInInches
+        heightInInches,
+        curtainWidthPx,
+        curtainHeightPx,
+        offsetX,
+        offsetY
       );
+  
+      setIsCanvasLoading(false);
     };
-
+  
     curtainImage.src = curtainImageSrc;
+    curtainImage.onerror = () => {
+      setIsCanvasLoading(false);
+    };
   };
 
-  const drawDimensionLines = (ctx, canvasWidth, canvasHeight) => {
-    const widthInInches =
-      measurementUnit === "Ft"
-        ? displayWidth * 12 + displayWidthInches
-        : displayWidth;
-    const heightInInches =
-      measurementUnit === "Ft"
-        ? displayHeight * 12 + displayHeightInches
-        : displayHeight;
-
+  const drawDimensionLines = (
+    ctx,
+    canvasWidth,
+    canvasHeight,
+    widthInInches,
+    heightInInches,
+    curtainWidthPx,
+    curtainHeightPx,
+    offsetX,
+    offsetY
+  ) => {
     ctx.strokeStyle = "black";
     ctx.lineWidth = 2;
     ctx.font = "16px Arial";
     ctx.fillStyle = "black";
-
-    const topLineY = 30;
+  
+    // --- Width Line ---
+    const topLineY = offsetY - 20;
     ctx.beginPath();
-    ctx.moveTo(20, topLineY);
-    ctx.lineTo(canvasWidth - 20, topLineY);
+    ctx.moveTo(offsetX, topLineY);
+    ctx.lineTo(offsetX + curtainWidthPx, topLineY);
     ctx.stroke();
-
-    drawArrow(ctx, 20, topLineY, 40, topLineY);
-    drawArrow(ctx, canvasWidth - 20, topLineY, canvasWidth - 40, topLineY);
-
+  
+    drawArrow(ctx, offsetX, topLineY, offsetX + 20, topLineY);
+    drawArrow(ctx, offsetX + curtainWidthPx, topLineY, offsetX + curtainWidthPx - 20, topLineY);
+  
     const widthLabel =
       measurementUnit === "Ft"
-        ? `${width}ft ${widthInches}in`
+        ? `${displayWidth}ft ${displayWidthInches}in`
         : `${widthInInches} Inch`;
-    ctx.fillText(widthLabel, canvasWidth / 2 - 40, topLineY - 10);
-
-    const rightLineX = canvasWidth - 30;
+    ctx.fillText(widthLabel, offsetX + curtainWidthPx / 2 - 40, topLineY - 10);
+  
+    // --- Height Line ---
+    const rightLineX = offsetX + curtainWidthPx + 20;
     ctx.beginPath();
-    ctx.moveTo(rightLineX, 60);
-    ctx.lineTo(rightLineX, canvasHeight - 60);
+    ctx.moveTo(rightLineX, offsetY);
+    ctx.lineTo(rightLineX, offsetY + curtainHeightPx);
     ctx.stroke();
-
-    drawArrow(ctx, rightLineX, 60, rightLineX, 80);
-    drawArrow(
-      ctx,
-      rightLineX,
-      canvasHeight - 60,
-      rightLineX,
-      canvasHeight - 80
-    );
-
+  
+    drawArrow(ctx, rightLineX, offsetY, rightLineX, offsetY + 20);
+    drawArrow(ctx, rightLineX, offsetY + curtainHeightPx, rightLineX, offsetY + curtainHeightPx - 20);
+  
     const heightLabel =
       measurementUnit === "Ft"
-        ? `${height}ft ${heightInches}in`
+        ? `${displayHeight}ft ${displayHeightInches}in`
         : `${heightInInches} Inch`;
     ctx.save();
-    ctx.translate(rightLineX + 20, canvasHeight / 2);
+    ctx.translate(rightLineX + 20, offsetY + curtainHeightPx / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.fillText(heightLabel, 0, 0);
     ctx.restore();
@@ -516,7 +530,6 @@ export default function ProductSpecification() {
     ctx.lineTo(toX, toY);
     ctx.stroke();
 
-    // Arrow head
     ctx.beginPath();
     ctx.moveTo(toX, toY);
     ctx.lineTo(
@@ -574,9 +587,8 @@ export default function ProductSpecification() {
 
   const handleFabricLeave = () => {
     if (!hasCustomDimensions) {
-      return
+      setCurrentImage(mainImages[currentBackground]);
     }
-    setCurrentImage(mainImages[currentBackground]);
   };
 
   useEffect(() => {
@@ -584,6 +596,30 @@ export default function ProductSpecification() {
       setCurrentImage(null);
     }
   }, [hasCustomDimensions]);
+
+  const handleMeasurementChange = (value, setter, displaySetter, field) => {
+    const numValue = parseInt(value) || 0;
+
+    setter(numValue);
+
+    const isValid = validateMeasurements({
+      width: field === "width" ? numValue : displayWidth,
+      height: field === "height" ? numValue : displayHeight,
+      measurementUnit,
+    });
+
+    if (isValid) {
+      setHasCustomDimensions(true);
+      if (
+        field === "width" ||
+        field === "height" ||
+        field === "widthInches" ||
+        field === "heightInches"
+      ) {
+        setTimeout(() => drawCurtainCanvas(), 50);
+      }
+    }
+  };
 
   return (
     <>
@@ -609,10 +645,11 @@ export default function ProductSpecification() {
                     src={img}
                     alt={`Room ${index + 1}`}
                     className="w-full h-full object-cover rounded"
-                    width={65}
-                    height={65}
+                    width={120}
+                    height={120}
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
+                    quality={90}
                   />
                 </div>
               ))}
@@ -635,6 +672,11 @@ export default function ProductSpecification() {
             >
               {hasCustomDimensions && currentImage === null ? (
                 <>
+                  {isCanvasLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+                    </div>
+                  )}
                   <canvas
                     ref={canvasRef}
                     className="w-full h-full cursor-pointer"
@@ -679,7 +721,7 @@ export default function ProductSpecification() {
                 .map((_, i) => (
                   <Star
                     key={i}
-                    className="w-4 h-4 text-pink-700 fill-pink-500"
+                    className="w-4 h-4 text-pink-500 fill-pink-500"
                   />
                 ))}
               <Star className="w-4 h-4 text-gray-300 fill-gray-300" />
@@ -689,8 +731,10 @@ export default function ProductSpecification() {
           <div className="text-xl font-semibold mb-4">${price.toFixed(2)}</div>
 
           <div className="flex items-center bg-[#fff2d8] p-3 mb-6 rounded-md">
-            <span className="mr-2">🚚</span>
-            <p className="text-sm">Expected Delivery by 18 Apr 2025, Fri</p>
+            <span className="mr-2">
+              <Truck className="w-4 h-4" />
+            </span>
+            <p className="text-sm">Expected Delivery by 11 Apr 2025, Fri</p>
           </div>
 
           <h2 className="font-semibold">
@@ -769,18 +813,19 @@ export default function ProductSpecification() {
                     </label>
                     <Input
                       id="width"
-                      type="number"
+                      type="text"
                       value={displayWidth}
                       onChange={(e) => {
                         const val = parseInt(e.target.value) || 0;
                         setDisplayWidth(val);
                       }}
                       onBlur={(e) => {
-                        const val = parseInt(e.target.value) || 0;
-                        setWidth(val);
-                        setDisplayWidth(val);
-                        setHasCustomDimensions(true);
-                        setTimeout(() => drawCurtainCanvas(), 50);
+                        handleMeasurementChange(
+                          e.target.value,
+                          setWidth,
+                          setDisplayWidth,
+                          "width"
+                        );
                       }}
                       className="w-full"
                     />
@@ -800,18 +845,19 @@ export default function ProductSpecification() {
                     </label>
                     <Input
                       id="height"
-                      type="number"
+                      type="text"
                       value={displayHeight}
                       onChange={(e) => {
                         const val = parseInt(e.target.value) || 0;
                         setDisplayHeight(val);
                       }}
                       onBlur={(e) => {
-                        const val = parseInt(e.target.value) || 0;
-                        setHeight(val);
-                        setDisplayHeight(val);
-                        setHasCustomDimensions(true);
-                        setTimeout(() => drawCurtainCanvas(), 50);
+                        handleMeasurementChange(
+                          e.target.value,
+                          setHeight,
+                          setDisplayHeight,
+                          "height"
+                        );
                       }}
                       className="w-full"
                     />
@@ -835,18 +881,19 @@ export default function ProductSpecification() {
 
                       <Input
                         id="width"
-                        type="number"
+                        type="text"
                         value={displayWidth}
                         onChange={(e) => {
                           const val = parseInt(e.target.value) || 0;
                           setDisplayWidth(val);
                         }}
                         onBlur={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setWidth(val);
-                          setDisplayWidth(val);
-                          setHasCustomDimensions(true);
-                          setTimeout(() => drawCurtainCanvas(), 50);
+                          handleMeasurementChange(
+                            e.target.value,
+                            setWidth,
+                            setDisplayWidth,
+                            "width"
+                          );
                         }}
                         className="w-full"
                       />
@@ -861,18 +908,19 @@ export default function ProductSpecification() {
                       </label>
                       <Input
                         id="widthInches"
-                        type="number"
+                        type="text"
                         value={displayWidthInches}
                         onChange={(e) => {
                           const val = parseInt(e.target.value) || 0;
                           setDisplayWidthInches(val);
                         }}
                         onBlur={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setWidthInches(val);
-                          setDisplayWidthInches(val);
-                          setHasCustomDimensions(true);
-                          setTimeout(() => drawCurtainCanvas(), 50);
+                          handleMeasurementChange(
+                            e.target.value,
+                            setWidthInches,
+                            setDisplayWidthInches,
+                            "widthInches"
+                          );
                         }}
                         className="w-full"
                       />
@@ -890,18 +938,19 @@ export default function ProductSpecification() {
                         </label>
                         <Input
                           id="height"
-                          type="number"
+                          type="text"
                           value={displayHeight}
                           onChange={(e) => {
                             const val = parseInt(e.target.value) || 0;
                             setDisplayHeight(val);
                           }}
                           onBlur={(e) => {
-                            const val = parseInt(e.target.value) || 0;
-                            setHeight(val);
-                            setDisplayHeight(val);
-                            setHasCustomDimensions(true);
-                            setTimeout(() => drawCurtainCanvas(), 50);
+                            handleMeasurementChange(
+                              e.target.value,
+                              setHeight,
+                              setDisplayHeight,
+                              "height"
+                            );
                           }}
                           className="w-full"
                         />
@@ -918,24 +967,29 @@ export default function ProductSpecification() {
                       </label>
                       <Input
                         id="heightInches"
-                        type="number"
+                        type="text"
                         value={displayHeightInches}
                         onChange={(e) => {
                           const val = parseInt(e.target.value) || 0;
                           setDisplayHeightInches(val);
                         }}
                         onBlur={(e) => {
-                          const val = parseInt(e.target.value) || 0;
-                          setHeightInches(val);
-                          setDisplayHeightInches(val);
-                          setHasCustomDimensions(true);
-                          setTimeout(() => drawCurtainCanvas(), 50);
+                          handleMeasurementChange(
+                            e.target.value,
+                            setHeightInches,
+                            setDisplayHeightInches,
+                            "heightInches"
+                          );
                         }}
                         className="w-full"
                       />
                     </div>
                   </div>
                 </div>
+              )}
+
+              {measurementError && (
+                <p className="text-sm text-pink-500 mt-2">{measurementError}</p>
               )}
             </div>
           </div>
@@ -969,9 +1023,9 @@ export default function ProductSpecification() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => handleQuantityChange(quantity + 1)}
                   className="rounded-full"
                   aria-label="Add Quantity"
+                  onClick={() => handleQuantityChange(quantity + 1)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -1012,7 +1066,9 @@ export default function ProductSpecification() {
                               setShowFabricSheet(true);
                             }}
                           >
-                            <ArrowRightIcon className="h-6 w-6 text-black" />
+                            <div className="bg-white p-1 rounded-full">
+                              <ArrowRightIcon className="h-4 w-4 text-black" />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1060,7 +1116,9 @@ export default function ProductSpecification() {
                               setShowHeadingSheet(true);
                             }}
                           >
-                            <ArrowRightIcon className="h-6 w-6 text-black" />
+                            <div className="bg-white p-1 rounded-full">
+                              <ArrowRightIcon className="h-4 w-4 text-black" />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1283,14 +1341,42 @@ export default function ProductSpecification() {
                           ({measurementUnit})
                         </span>
                       </label>
-                      <Input
-                        type="number"
-                        value={valanceHeight}
-                        onChange={(e) =>
-                          setValanceHeight(parseInt(e.target.value) || 0)
+                      <Select
+                        value={valanceHeight.toString()}
+                        onValueChange={(value) =>
+                          setValanceHeight(parseInt(value))
                         }
-                        className="w-full bg-white"
-                      />
+                      >
+                        <SelectTrigger className="w-full bg-white text-black border border-gray-300 shadow-sm hover:border-gray-400 focus:ring-2 focus:ring-blue-500 rounded-md">
+                          <SelectValue placeholder="Select height" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white text-black border border-gray-200 shadow-lg rounded-md">
+                          <SelectItem
+                            value="12"
+                            className="hover:bg-gray-100 cursor-pointer"
+                          >
+                            12
+                          </SelectItem>
+                          <SelectItem
+                            value="16"
+                            className="hover:bg-gray-100 cursor-pointer"
+                          >
+                            16
+                          </SelectItem>
+                          <SelectItem
+                            value="20"
+                            className="hover:bg-gray-100 cursor-pointer"
+                          >
+                            20
+                          </SelectItem>
+                          <SelectItem
+                            value="24"
+                            className="hover:bg-gray-100 cursor-pointer"
+                          >
+                            24
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <span className="border-1 mr-3"></span>
                     <div>
@@ -1307,19 +1393,19 @@ export default function ProductSpecification() {
                             height={74}
                           />
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-2">
                           <p className="font-medium">{selectedFabric.name}</p>
                           <p className="text-sm bg-pink-100 p-1 rounded-sm text-center">
                             ${selectedFabric.price.toFixed(2)}
                           </p>
-                        </div>
-                        <div
-                          className="ml-2 text-pink-700 underline text-sm cursor-pointer"
-                          onClick={() => {
-                            setShowFabricSheet(true);
-                          }}
-                        >
-                          Change
+                          <div
+                            className="ml-2 text-pink-700 underline text-sm cursor-pointer"
+                            onClick={() => {
+                              setShowFabricSheet(true);
+                            }}
+                          >
+                            Change
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1375,7 +1461,7 @@ export default function ProductSpecification() {
               <div className="text-2xl font-bold">${price.toFixed(2)}</div>
               <Button
                 size="lg"
-                className="bg-pink-500 hover:bg-pink-600 text-white px-8 shadow-lg transform hover:-translate-y-1 transition-all duration-200"
+                className="bg-pink-700 hover:bg-pink-800 text-white px-8 shadow-lg transform hover:-translate-y-1 transition-all duration-200 cursor-pointer"
               >
                 Add to Cart
               </Button>
@@ -1384,6 +1470,7 @@ export default function ProductSpecification() {
         </div>
 
         <Sheet open={showFabricSheet} onOpenChange={setShowFabricSheet}>
+          <SheetTitle></SheetTitle>
           <SheetContent side="right" className="w-full sm:w-1/3 p-5">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Fabric/Texture</h3>
@@ -1425,6 +1512,7 @@ export default function ProductSpecification() {
         </Sheet>
 
         <Sheet open={showHeadingSheet} onOpenChange={setShowHeadingSheet}>
+          <SheetTitle></SheetTitle>
           <SheetContent side="right" className="w-full sm:w-1/3 p-5">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Heading Styles</h3>
@@ -1464,24 +1552,24 @@ export default function ProductSpecification() {
 
       {showPreview && (
         <>
-          <div className="fixed inset-0 opacity-0 z-40" />
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40" />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="relative w-2/3 h-2/3 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+            <div className="relative w-5/6 h-5/6 bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
               <Button
                 onClick={() => setShowPreview(false)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white hover:bg-gray-100 transition-colors cursor-pointer"
                 aria-label="Close the preview section"
               >
-                <X className="w-5 h-5 " />
+                <X className="w-5 h-5 text-black" />
               </Button>
 
-              <div className="flex-1 flex items-center justify-center bg-gray-50 overflow-auto p-2">
+              <div className="flex-1 flex items-center justify-center bg-gray-50 overflow-auto">
                 {previewImage ? (
                   <img
                     src={previewImage}
                     alt="Custom Curtain Preview"
-                    className="max-w-full max-h-full object-contain"
+                    className="w-full max-h-full object-contain"
                   />
                 ) : (
                   <div className="text-gray-500">

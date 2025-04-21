@@ -47,7 +47,7 @@ export default function ProductDetail() {
               </li>
             ))}
           </ul>
-          <Link href="#" className="text-pink-700 mt-4 inline-block underline float-end">
+          <Link href="#" className="text-pink-800 mt-4 inline-block underline float-end">
             Read More
           </Link>
         </div>
